@@ -25,7 +25,7 @@ This document defines MVP system boundaries and major technical decisions. Detai
 | Area | Decision |
 | --- | --- |
 | Language | TypeScript / Node.js |
-| Application | CLI only; no daemon or desktop app |
+| Application | CLI-first; no long-lived daemon or desktop app. A short-lived human approval surface may be invoked when required. |
 | Execution engine | User-installed `act`, discovered from `PATH` |
 | Container runtime | Docker-compatible runtime used by `act` |
 | Git integration | Repository Git hooks |
@@ -146,11 +146,13 @@ git push
 
 ## 8. Approval Boundary
 
-The MVP is CLI-only, but approval must remain a separate core boundary.
+Approval remains a separate core boundary.
 
-CI See must not add a trivial machine-only `--force` path that an AI agent could silently use. Until the approval UX spec defines an agent-safe bypass mechanism, a non-PASS gate may block without offering an unsafe bypass.
+The MVP does not require a long-lived daemon or desktop application, but the CLI may invoke a short-lived human approval surface when a developer decision is required. The exact mechanism belongs in the approval UX spec.
 
-This keeps the CLI architecture simple while allowing a future desktop/background approval provider without rewriting Git gating.
+CI See must not expose a trivial machine-only `--force` or equivalent bypass that an AI agent could silently use. Non-interactive Git operations must fail safely if a valid developer approval cannot be obtained.
+
+This keeps the core CLI architecture small while preserving the PRD requirement for developer-controlled bypass across terminal, IDE, and AI-agent initiated Git operations.
 
 ## 9. Reliability and Security
 
