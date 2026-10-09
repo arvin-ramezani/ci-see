@@ -4,7 +4,7 @@
 **Product:** CI See  
 **Canonical path:** `docs/specs/developer-approval-ux.md`  
 **Depends on:** `docs/prd.md`, `docs/architecture.md`, `docs/specs/git-gating.md`  
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-09
 
 ## 1. Purpose
 
@@ -50,6 +50,15 @@ For the MVP, CI See invokes a **short-lived human-facing approval provider** and
 No long-running daemon is required.
 
 The provider is behind an adapter so platform-specific implementations can differ without changing core gate rules.
+
+**A popup is not proof of human approval.** Before enabling Continue anyway, the implementation must document and verify the provider's trust boundary:
+
+- identify which agent-controlled inputs/processes can reach the provider and its response channel;
+- accept only a request-specific, authenticated, single-use provider response bound to the operation and validation fingerprint; reject forged/replayed responses and never trust a child exit code, stdout text, or caller-written file alone;
+- establish how the provider authenticates the confirmation source and what prevents the initiating AI/CLI process from supplying approval without interaction;
+- demonstrate the claimed protection with adversarial tests on the supported platform.
+
+If no provider can substantiate its claimed human-approval boundary, **Continue anyway remains unavailable** and non-PASS operations block. Do not weaken this rule to satisfy the CLI-only MVP constraint.
 
 ## 5. Primary Platform
 
@@ -104,7 +113,7 @@ Each approval request is bound to:
 - current non-PASS result;
 - one approval request ID.
 
-Before accepting Continue anyway, CI See rechecks that the request still matches the current operation/state.
+Before accepting Continue anyway, CI See verifies the provider response is genuine and unconsumed for this request, then rechecks that the request still matches the current operation/state.
 
 If the state changed while approval was open, the request becomes invalid and the operation blocks or reevaluates.
 
@@ -190,13 +199,13 @@ Audit records are diagnostic history, not reusable authorization.
 
 ## 13. Security Boundary
 
-CI See can prevent accidental or product-level automated bypass through its own interface.
+**In-scope threat:** an AI agent can initiate Git/CLI commands, set process arguments/environment, write stdin, read output, and modify its checkout. None of these capabilities alone may authorize a CI See bypass.
 
-It cannot guarantee protection from a process/user that intentionally bypasses Git hooks, modifies CI See state, or controls the host OS.
+**Residual risk:** a same-user agent with desktop automation, accessibility APIs, or control over the provider process/IPC may be able to click or forge approval. A normal Windows popup, including one launched from WSL2, does not by itself establish that a human approved it. Full host compromise and native Git `--no-verify` are outside CI See's enforcement guarantee.
 
-Native Git `--no-verify` remains outside CI See's enforcement boundary.
+Before shipping bypass, a security review must document the provider implementation, process/IPC permissions, UI automation exposure, caller-versus-approver trust separation, and limitations. Validate that the provider enforces the documented boundary. Where this cannot be demonstrated, disable Continue anyway and fail closed, rather than claiming agent-proof authorization.
 
-The product must document this honestly rather than claim tamper-proof enforcement.
+The product must state its actual assurance level; never claim tamper-proof or guaranteed human-only enforcement on an uncontrolled local host.
 
 ## 14. Required Acceptance Tests
 
@@ -216,7 +225,12 @@ Implementation must prove:
 12. headless mode does not wait indefinitely or auto-approve;
 13. bypass audit metadata contains no secret values;
 14. terminal/IDE/agent receives an unambiguous final result;
-15. Windows 11 + WSL2 can present the human-facing approval surface.
+15. Windows 11 + WSL2 can present the human-facing approval surface;
+16. caller-controlled flags, environment, stdin, output, files, or process exit codes cannot forge approval;
+17. provider response authentication, request binding, expiry, single-use consumption, and replay rejection work;
+18. adversarial attempts to automate the provider UI or spoof its IPC are tested on Windows 11 + WSL2, with residual risks recorded;
+19. a provider that fails trust-boundary verification has Continue anyway disabled and blocks non-PASS Git operations;
+20. security review documents precisely which automated-agent capabilities are and are not resisted.
 
 ## 15. Deferred
 
