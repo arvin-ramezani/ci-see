@@ -58,8 +58,8 @@ Secondary users:
 5. **Exact-state validation.** A PASS applies only to the exact state that was validated.
 6. **Fail safe.** Unknown, stale, interrupted, or failed state is never PASS.
 7. **Cross-platform UX.** Windows, Linux, and macOS should present a consistent product experience.
-9. **Lightweight installation.** CI See is delivered as a compiled Go CLI; users of prebuilt binaries should not need Go or Node.js installed.
 8. **Low adoption cost.** Existing repositories should need minimal configuration and minimal workflow changes.
+9. **Lightweight installation.** CI See is delivered as a compiled Go CLI; users of prebuilt binaries should not need Go or Node.js installed.
 
 ## 5. Recommended User Flow
 
