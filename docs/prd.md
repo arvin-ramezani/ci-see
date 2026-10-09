@@ -234,6 +234,8 @@ CI See must not expose a trivial machine-only approval path that lets an AI agen
 
 A bypass should be bound as narrowly as practical to the exact operation and repository state.
 
+A successful bypass must have its audit record durably saved **before** Git is allowed to continue. If the record cannot be saved or verified, CI See must block the operation; the approval alone is not sufficient.
+
 ### FR-10 — Remote duplicate-execution control
 
 CI See must provide a safe way to avoid unnecessary duplicate GitHub-hosted CI after the exact code already passed locally.
@@ -289,7 +291,7 @@ MVP execution may be Linux-container-centric and is not required to fully emulat
 3. **Concurrency safety:** simultaneous CI runs or Git operations cannot corrupt state or associate a result with the wrong code.
 4. **Repository isolation:** state from one repository/worktree cannot satisfy another incompatible state.
 5. **Workflow invalidation:** workflow/config changes invalidate dependent results.
-6. **Visible bypass:** developer bypasses are recorded locally and visible.
+6. **Durable bypass audit:** every allowed bypass requires a successfully persisted local audit record before continuation; missing or failed audit persistence blocks Git.
 7. **Safe recovery:** if CI See crashes while Git is waiting, Git fails safely instead of silently continuing.
 
 ## 8. Compatibility Goals
