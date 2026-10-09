@@ -131,7 +131,8 @@ The bypass:
 - applies only to the exact bound state;
 - is consumed once;
 - must not become a reusable PASS;
-- must not make future commits/pushes automatically allowed.
+- must not make future commits/pushes automatically allowed;
+- requires its audit record to be durably persisted before returning `ALLOW_BYPASS`.
 
 ## 9. Cancellation and Failure
 
@@ -187,6 +188,10 @@ Do not record secret values.
 
 Audit records are diagnostic history, not reusable authorization.
 
+**Mandatory persistence gate:** After verifying an explicit, valid approval, CI See must atomically and durably save its audit record **before** returning `ALLOW_BYPASS`. If writing, syncing, or verifying the record fails (including full disk or denied permission), CI See returns `BLOCK_ERROR` and the Git operation remains blocked. Do not treat the UI approval or a partial file write as sufficient.
+
+A saved approval decision records authorization for the attempted operation, not proof that Git eventually completed. Repeated or concurrent requests must not reuse it. For Cancel/deny decisions, audit recording is best-effort and never permits continuation.
+
 ## 12. User Experience Rules
 
 - Keep the decision surface small and direct.
@@ -230,7 +235,10 @@ Implementation must prove:
 17. provider response authentication, request binding, expiry, single-use consumption, and replay rejection work;
 18. adversarial attempts to automate the provider UI or spoof its IPC are tested on Windows 11 + WSL2, with residual risks recorded;
 19. a provider that fails trust-boundary verification has Continue anyway disabled and blocks non-PASS Git operations;
-20. security review documents precisely which automated-agent capabilities are and are not resisted.
+20. security review documents precisely which automated-agent capabilities are and are not resisted;
+21. `ALLOW_BYPASS` is returned only after the corresponding audit record is fully and durably persisted;
+22. disk-full, permission-denied, interrupted/partial write, or verification failure returns `BLOCK_ERROR` and blocks Git;
+23. an audit record from one approval cannot authorize another operation, and a recorded approval must not be reported as successful Git completion.
 
 ## 15. Deferred
 
