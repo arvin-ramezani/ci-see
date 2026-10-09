@@ -4,7 +4,7 @@
 **Product:** CI See  
 **Canonical path:** `docs/specs/local-ci-execution.md`  
 **Depends on:** `docs/prd.md`, `docs/architecture.md`  
-**Last updated:** 2026-10-03
+**Last updated:** 2026-10-09
 
 ## 1. Purpose
 
@@ -31,9 +31,11 @@ This spec does not own Git commit/push gating or developer bypass behavior.
 
 The user installs:
 
-- Node.js supported by CI See;
+- the **prebuilt Go `ci-see` executable** for their host OS/architecture (or builds it from source);
 - `act`, available on `PATH`;
 - Docker or another `act`-compatible container runtime.
+
+Users of a prebuilt CI See executable do **not** need to install Go, Node.js, or npm. The Go toolchain is needed only when building CI See from source. CI See must not invoke Node.js as part of its own orchestration; GitHub Actions workflows executed by `act` may independently require Node.js or other runtimes inside their jobs.
 
 CI See must detect missing or unusable dependencies before starting a run and return INCOMPLETE, never PASS.
 
@@ -117,7 +119,7 @@ ci-see
 → return final status
 ```
 
-CI See invokes `act` as a child process using argument arrays, not shell-built command strings.
+The compiled Go CLI invokes `act` as a child process using Go `os/exec` and argument arrays, not shell-built command strings.
 
 ## 8. Execution Isolation
 
@@ -226,7 +228,9 @@ Before this spec is considered implemented, tests must prove:
 7. secrets are not included in normal result metadata;
 8. concurrent runs cannot corrupt one another's state;
 9. unsupported execution is visible and non-PASS when it prevents required validation;
-10. recorded results include the detected `act` version.
+10. recorded results include the detected `act` version;
+11. a prebuilt CI See binary can run without Go or Node.js installed on the host;
+12. CI See's own orchestration runs through Go and does not depend on npm or a JavaScript runtime.
 
 ## 15. Deferred
 
