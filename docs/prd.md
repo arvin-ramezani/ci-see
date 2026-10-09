@@ -4,7 +4,7 @@
 **Product:** CI See  
 **Canonical owner:** Product requirements  
 **Canonical path:** docs/prd.md  
-**Last updated:** 2026-09-26
+**Last updated:** 2026-10-09
 
 ## 1. Product Summary
 
@@ -58,6 +58,7 @@ Secondary users:
 5. **Exact-state validation.** A PASS applies only to the exact state that was validated.
 6. **Fail safe.** Unknown, stale, interrupted, or failed state is never PASS.
 7. **Cross-platform UX.** Windows, Linux, and macOS should present a consistent product experience.
+9. **Lightweight installation.** CI See is delivered as a compiled Go CLI; users of prebuilt binaries should not need Go or Node.js installed.
 8. **Low adoption cost.** Existing repositories should need minimal configuration and minimal workflow changes.
 
 ## 5. Recommended User Flow
@@ -153,6 +154,8 @@ ci-see
 
 Current MVP direction:
 
+- implement CI See orchestration and Git gating in **Go**;
+- distribute prebuilt CLI binaries for supported host OS/architectures without a Node.js runtime dependency;
 - use nektos/act as the GitHub Actions execution engine;
 - use Docker or a compatible container runtime for consistent Linux execution.
 
@@ -364,6 +367,7 @@ The MVP is successful when:
 ## 12. Confirmed Product Decisions
 
 - Product name: **CI See**.
+- MVP implementation language: **Go**, compiled CLI with prebuilt cross-platform binaries; no Node.js/TypeScript app or Node.js runtime dependency. The Go toolchain is required only when building from source.
 - GitHub Actions workflows remain the primary CI definitions.
 - Local execution is a core capability.
 - Default development flow validates locally before commit/push.
@@ -375,6 +379,7 @@ The MVP is successful when:
 
 ## 13. Current MVP Direction Requiring Technical Validation
 
+- Go modules and prebuilt Go executables for the CLI, with the exact build/release toolchain pinned during implementation;
 - nektos/act as the local workflow execution engine;
 - Docker-compatible runtime as the execution substrate;
 - Git hooks or equivalent interception for commit/push;
