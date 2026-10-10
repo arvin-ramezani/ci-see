@@ -1,0 +1,4 @@
+interface:
+  display_name: "Context Engineering"
+  short_description: "Review and organize repository knowledge"
+  default_prompt: "Use $context-engineering to review and restructure this repository’s documentation for reliable agent retrieval while preserving its requirements."
