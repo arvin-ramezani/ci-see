@@ -1,7 +1,9 @@
 # CI See — Agent Instructions
 
-Start with [documentation index](docs/index.md). Load only task-specific canonical
-context, and follow [context policy](docs/context-policy.md) when modifying docs.
+Use the [documentation index](docs/index.md) to locate the relevant contract;
+load only the topic sections needed for the task. The public contract paths are
+compatibility indexes, with the original text preserved in task-scoped child files.
+Follow [context policy](docs/context-policy.md) when modifying documentation.
 
 ## Authority and workflow
 
@@ -25,7 +27,7 @@ but never silently change accepted meaning or application behavior.
 Capture a baseline, map every affected substantive unit, repair navigation, and
 compare original to new meaning. Review over-150-line files; do not split mechanically.
 
-Check common Markdown links and index reachability:
+Check links, fragments, unique authoritative IDs, and index reachability:
 
 ```bash
 python .agents/skills/context-engineering/scripts/inspect_docs.py . --docs docs --entry docs/index.md --check
@@ -33,3 +35,11 @@ python .agents/skills/context-engineering/scripts/inspect_docs.py . --docs docs 
 
 The scanner does not check fragment anchors, nested Markdown, semantic preservation,
 or implementation correctness. Python is not a CI See Go runtime requirement.
+
+Additional contract/legacy-anchor checks:
+
+```bash
+python3 scripts/validate_docs.py --check
+```
+
+Neither command proves semantic equivalence or that runtime tests pass.

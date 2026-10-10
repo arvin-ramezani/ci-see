@@ -1,0 +1,31 @@
+name: Documentation validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'scripts/validate_docs.py'
+      - '.agents/skills/context-engineering/**'
+      - '.github/workflows/docs-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'scripts/validate_docs.py'
+      - '.agents/skills/context-engineering/**'
+      - '.github/workflows/docs-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate documentation
+        run: python3 scripts/validate_docs.py --check
