@@ -13,5 +13,12 @@ or make a draft/plan authoritative over a product or behavior contract.
 | [Go implementation plan](implementation-plan.md) | Slices, tests and review gates | Planning or implementing slices |
 | [Context policy](context-policy.md) | Routing, splitting and preservation | Changing documentation |
 
+## Navigation and migration
+
+Every contract link above is a permanent canonical entrypoint. Its section headings redirect to
+verbatim task-scoped files. For the source-to-destination/legacy-anchor inventory and size
+review, see the [migration evidence](migration/index.md). Issue [#9](https://github.com/arvin-ramezani/ci-see/issues/9)
+(S0 traceability) should use these canonical indexes and not duplicate their clauses.
+
 Agent entry: [`AGENTS.md`](../AGENTS.md).
 Installed skill: [Context Engineering](../.agents/skills/context-engineering/SKILL.md).

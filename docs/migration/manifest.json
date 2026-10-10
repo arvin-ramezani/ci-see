@@ -1,0 +1,949 @@
+{
+  "baseline_commit": "770238b55a1c532c541eea1e5dfe4efe66c594ab",
+  "authority": "All original sections moved verbatim; root files retain legacy heading anchors",
+  "sources": [
+    {
+      "source": "docs/prd.md",
+      "git_blob_sha": "89fa137e14de65e502b1684be505d0e01da72873",
+      "original_lines": 467,
+      "children": [
+        {
+          "path": "docs/prd/product-and-flow.md",
+          "title": "Product, audience, principles, and Git/agent flow",
+          "start_line": 1,
+          "end_line": 121,
+          "chars": 4416
+        },
+        {
+          "path": "docs/prd/repository-and-result-requirements.md",
+          "title": "FR-1–FR-5: initialization, workflow execution, and results",
+          "start_line": 122,
+          "end_line": 197,
+          "chars": 1694
+        },
+        {
+          "path": "docs/prd/gating-and-remote-requirements.md",
+          "title": "FR-6–FR-10: Git gates, approvals, hosted CI",
+          "start_line": 198,
+          "end_line": 252,
+          "chars": 1690
+        },
+        {
+          "path": "docs/prd/diagnostics-and-platform-requirements.md",
+          "title": "FR-11–FR-13: diagnostics, secrets, host support",
+          "start_line": 253,
+          "end_line": 289,
+          "chars": 740
+        },
+        {
+          "path": "docs/prd/quality-and-scope.md",
+          "title": "Reliability, compatibility, and MVP scope",
+          "start_line": 290,
+          "end_line": 344,
+          "chars": 2199
+        },
+        {
+          "path": "docs/prd/success-and-decisions.md",
+          "title": "Success criteria, decisions, technical validation, open questions",
+          "start_line": 345,
+          "end_line": 400,
+          "chars": 2426
+        },
+        {
+          "path": "docs/prd/documentation-and-next.md",
+          "title": "Documentation strategy and next specifications",
+          "start_line": 401,
+          "end_line": 467,
+          "chars": 1721
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Product Summary",
+          "original_line": 9,
+          "legacy_fragment": "1-product-summary",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "1-product-summary"
+        },
+        {
+          "heading": "2. Problem",
+          "original_line": 23,
+          "legacy_fragment": "2-problem",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "2-problem"
+        },
+        {
+          "heading": "3. Target Users",
+          "original_line": 38,
+          "legacy_fragment": "3-target-users",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "3-target-users"
+        },
+        {
+          "heading": "4. Product Principles",
+          "original_line": 52,
+          "legacy_fragment": "4-product-principles",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "4-product-principles"
+        },
+        {
+          "heading": "5. Recommended User Flow",
+          "original_line": 64,
+          "legacy_fragment": "5-recommended-user-flow",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "5-recommended-user-flow"
+        },
+        {
+          "heading": "Commit gate",
+          "original_line": 78,
+          "legacy_fragment": "commit-gate",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "commit-gate"
+        },
+        {
+          "heading": "AI-agent flow",
+          "original_line": 103,
+          "legacy_fragment": "ai-agent-flow",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "ai-agent-flow"
+        },
+        {
+          "heading": "Push gate",
+          "original_line": 116,
+          "legacy_fragment": "push-gate",
+          "destination": "docs/prd/product-and-flow.md",
+          "destination_fragment": "push-gate"
+        },
+        {
+          "heading": "6. Functional Requirements",
+          "original_line": 122,
+          "legacy_fragment": "6-functional-requirements",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "6-functional-requirements"
+        },
+        {
+          "heading": "FR-1 — Repository initialization",
+          "original_line": 124,
+          "legacy_fragment": "fr-1--repository-initialization",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "fr-1--repository-initialization"
+        },
+        {
+          "heading": "FR-2 — Workflow discovery",
+          "original_line": 141,
+          "legacy_fragment": "fr-2--workflow-discovery",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "fr-2--workflow-discovery"
+        },
+        {
+          "heading": "FR-3 — One-command local CI",
+          "original_line": 147,
+          "legacy_fragment": "fr-3--one-command-local-ci",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "fr-3--one-command-local-ci"
+        },
+        {
+          "heading": "FR-4 — Event handling",
+          "original_line": 164,
+          "legacy_fragment": "fr-4--event-handling",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "fr-4--event-handling"
+        },
+        {
+          "heading": "FR-5 — Durable result identity",
+          "original_line": 174,
+          "legacy_fragment": "fr-5--durable-result-identity",
+          "destination": "docs/prd/repository-and-result-requirements.md",
+          "destination_fragment": "fr-5--durable-result-identity"
+        },
+        {
+          "heading": "FR-6 — Exact-state gating",
+          "original_line": 198,
+          "legacy_fragment": "fr-6--exact-state-gating",
+          "destination": "docs/prd/gating-and-remote-requirements.md",
+          "destination_fragment": "fr-6--exact-state-gating"
+        },
+        {
+          "heading": "FR-7 — Native Git workflow",
+          "original_line": 204,
+          "legacy_fragment": "fr-7--native-git-workflow",
+          "destination": "docs/prd/gating-and-remote-requirements.md",
+          "destination_fragment": "fr-7--native-git-workflow"
+        },
+        {
+          "heading": "FR-8 — Developer decision UI",
+          "original_line": 210,
+          "legacy_fragment": "fr-8--developer-decision-ui",
+          "destination": "docs/prd/gating-and-remote-requirements.md",
+          "destination_fragment": "fr-8--developer-decision-ui"
+        },
+        {
+          "heading": "FR-9 — Developer-only bypass",
+          "original_line": 232,
+          "legacy_fragment": "fr-9--developer-only-bypass",
+          "destination": "docs/prd/gating-and-remote-requirements.md",
+          "destination_fragment": "fr-9--developer-only-bypass"
+        },
+        {
+          "heading": "FR-10 — Remote duplicate-execution control",
+          "original_line": 242,
+          "legacy_fragment": "fr-10--remote-duplicate-execution-control",
+          "destination": "docs/prd/gating-and-remote-requirements.md",
+          "destination_fragment": "fr-10--remote-duplicate-execution-control"
+        },
+        {
+          "heading": "FR-11 — Logs and diagnostics",
+          "original_line": 253,
+          "legacy_fragment": "fr-11--logs-and-diagnostics",
+          "destination": "docs/prd/diagnostics-and-platform-requirements.md",
+          "destination_fragment": "fr-11--logs-and-diagnostics"
+        },
+        {
+          "heading": "FR-12 — Secrets and variables",
+          "original_line": 266,
+          "legacy_fragment": "fr-12--secrets-and-variables",
+          "destination": "docs/prd/diagnostics-and-platform-requirements.md",
+          "destination_fragment": "fr-12--secrets-and-variables"
+        },
+        {
+          "heading": "FR-13 — Cross-platform host support",
+          "original_line": 278,
+          "legacy_fragment": "fr-13--cross-platform-host-support",
+          "destination": "docs/prd/diagnostics-and-platform-requirements.md",
+          "destination_fragment": "fr-13--cross-platform-host-support"
+        },
+        {
+          "heading": "7. Reliability and Safety Requirements",
+          "original_line": 290,
+          "legacy_fragment": "7-reliability-and-safety-requirements",
+          "destination": "docs/prd/quality-and-scope.md",
+          "destination_fragment": "7-reliability-and-safety-requirements"
+        },
+        {
+          "heading": "8. Compatibility Goals",
+          "original_line": 300,
+          "legacy_fragment": "8-compatibility-goals",
+          "destination": "docs/prd/quality-and-scope.md",
+          "destination_fragment": "8-compatibility-goals"
+        },
+        {
+          "heading": "9. MVP Non-Goals",
+          "original_line": 316,
+          "legacy_fragment": "9-mvp-non-goals",
+          "destination": "docs/prd/quality-and-scope.md",
+          "destination_fragment": "9-mvp-non-goals"
+        },
+        {
+          "heading": "10. MVP Scope",
+          "original_line": 329,
+          "legacy_fragment": "10-mvp-scope",
+          "destination": "docs/prd/quality-and-scope.md",
+          "destination_fragment": "10-mvp-scope"
+        },
+        {
+          "heading": "11. Success Criteria",
+          "original_line": 345,
+          "legacy_fragment": "11-success-criteria",
+          "destination": "docs/prd/success-and-decisions.md",
+          "destination_fragment": "11-success-criteria"
+        },
+        {
+          "heading": "12. Confirmed Product Decisions",
+          "original_line": 367,
+          "legacy_fragment": "12-confirmed-product-decisions",
+          "destination": "docs/prd/success-and-decisions.md",
+          "destination_fragment": "12-confirmed-product-decisions"
+        },
+        {
+          "heading": "13. Current MVP Direction Requiring Technical Validation",
+          "original_line": 380,
+          "legacy_fragment": "13-current-mvp-direction-requiring-technical-validation",
+          "destination": "docs/prd/success-and-decisions.md",
+          "destination_fragment": "13-current-mvp-direction-requiring-technical-validation"
+        },
+        {
+          "heading": "14. Open Questions for Later Specs",
+          "original_line": 388,
+          "legacy_fragment": "14-open-questions-for-later-specs",
+          "destination": "docs/prd/success-and-decisions.md",
+          "destination_fragment": "14-open-questions-for-later-specs"
+        },
+        {
+          "heading": "15. Documentation Strategy",
+          "original_line": 401,
+          "legacy_fragment": "15-documentation-strategy",
+          "destination": "docs/prd/documentation-and-next.md",
+          "destination_fragment": "15-documentation-strategy"
+        },
+        {
+          "heading": "16. Next Spec-Driven Artifacts",
+          "original_line": 430,
+          "legacy_fragment": "16-next-spec-driven-artifacts",
+          "destination": "docs/prd/documentation-and-next.md",
+          "destination_fragment": "16-next-spec-driven-artifacts"
+        }
+      ]
+    },
+    {
+      "source": "docs/architecture.md",
+      "git_blob_sha": "23f8a7d63d9677c2577cbe6f7c5750370aa55401",
+      "original_lines": 225,
+      "children": [
+        {
+          "path": "docs/architecture/foundations-and-state.md",
+          "title": "Goals, Go architecture decisions, components, state",
+          "start_line": 1,
+          "end_line": 113,
+          "chars": 3359
+        },
+        {
+          "path": "docs/architecture/runtime-and-trust.md",
+          "title": "Execution/gating flows, approvals, security, platforms",
+          "start_line": 114,
+          "end_line": 176,
+          "chars": 2387
+        },
+        {
+          "path": "docs/architecture/code-boundaries-and-decisions.md",
+          "title": "Go package boundaries, deferred decisions, next specs",
+          "start_line": 177,
+          "end_line": 225,
+          "chars": 1570
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Purpose",
+          "original_line": 8,
+          "legacy_fragment": "1-purpose",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "1-purpose"
+        },
+        {
+          "heading": "2. Architecture Goals",
+          "original_line": 14,
+          "legacy_fragment": "2-architecture-goals",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "2-architecture-goals"
+        },
+        {
+          "heading": "3. MVP Decisions",
+          "original_line": 23,
+          "legacy_fragment": "3-mvp-decisions",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "3-mvp-decisions"
+        },
+        {
+          "heading": "4. System Context",
+          "original_line": 39,
+          "legacy_fragment": "4-system-context",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "4-system-context"
+        },
+        {
+          "heading": "5. Components",
+          "original_line": 61,
+          "legacy_fragment": "5-components",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "5-components"
+        },
+        {
+          "heading": "CLI",
+          "original_line": 63,
+          "legacy_fragment": "cli",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "cli"
+        },
+        {
+          "heading": "Core",
+          "original_line": 73,
+          "legacy_fragment": "core",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "core"
+        },
+        {
+          "heading": "Adapters",
+          "original_line": 83,
+          "legacy_fragment": "adapters",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "adapters"
+        },
+        {
+          "heading": "Git hooks",
+          "original_line": 89,
+          "legacy_fragment": "git-hooks",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "git-hooks"
+        },
+        {
+          "heading": "6. Local State",
+          "original_line": 93,
+          "legacy_fragment": "6-local-state",
+          "destination": "docs/architecture/foundations-and-state.md",
+          "destination_fragment": "6-local-state"
+        },
+        {
+          "heading": "7. Runtime Flows",
+          "original_line": 114,
+          "legacy_fragment": "7-runtime-flows",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "7-runtime-flows"
+        },
+        {
+          "heading": "Local run",
+          "original_line": 116,
+          "legacy_fragment": "local-run",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "local-run"
+        },
+        {
+          "heading": "Commit gate",
+          "original_line": 128,
+          "legacy_fragment": "commit-gate",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "commit-gate"
+        },
+        {
+          "heading": "Push gate",
+          "original_line": 138,
+          "legacy_fragment": "push-gate",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "push-gate"
+        },
+        {
+          "heading": "8. Approval Boundary",
+          "original_line": 148,
+          "legacy_fragment": "8-approval-boundary",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "8-approval-boundary"
+        },
+        {
+          "heading": "9. Reliability and Security",
+          "original_line": 158,
+          "legacy_fragment": "9-reliability-and-security",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "9-reliability-and-security"
+        },
+        {
+          "heading": "10. Platform Strategy",
+          "original_line": 167,
+          "legacy_fragment": "10-platform-strategy",
+          "destination": "docs/architecture/runtime-and-trust.md",
+          "destination_fragment": "10-platform-strategy"
+        },
+        {
+          "heading": "11. Code Boundaries",
+          "original_line": 177,
+          "legacy_fragment": "11-code-boundaries",
+          "destination": "docs/architecture/code-boundaries-and-decisions.md",
+          "destination_fragment": "11-code-boundaries"
+        },
+        {
+          "heading": "12. Deferred Decisions",
+          "original_line": 206,
+          "legacy_fragment": "12-deferred-decisions",
+          "destination": "docs/architecture/code-boundaries-and-decisions.md",
+          "destination_fragment": "12-deferred-decisions"
+        },
+        {
+          "heading": "13. Next Specifications",
+          "original_line": 218,
+          "legacy_fragment": "13-next-specifications",
+          "destination": "docs/architecture/code-boundaries-and-decisions.md",
+          "destination_fragment": "13-next-specifications"
+        }
+      ]
+    },
+    {
+      "source": "docs/implementation-plan.md",
+      "git_blob_sha": "eab90d6362df4a4c163e419ea319ce1f5c1a9093",
+      "original_lines": 87,
+      "children": [
+        {
+          "path": "docs/implementation-plan/authority-and-gates.md",
+          "title": "Scope, execution rules, D1–D4 decision gates",
+          "start_line": 1,
+          "end_line": 38,
+          "chars": 4202
+        },
+        {
+          "path": "docs/implementation-plan/vertical-slices.md",
+          "title": "S0–S10 dependency-ordered slices",
+          "start_line": 39,
+          "end_line": 56,
+          "chars": 5528
+        },
+        {
+          "path": "docs/implementation-plan/verification-and-risks.md",
+          "title": "Test matrix, review/merge gates, risks",
+          "start_line": 57,
+          "end_line": 87,
+          "chars": 3668
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Objective and Authority",
+          "original_line": 9,
+          "legacy_fragment": "1-objective-and-authority",
+          "destination": "docs/implementation-plan/authority-and-gates.md",
+          "destination_fragment": "1-objective-and-authority"
+        },
+        {
+          "heading": "2. Execution Rules",
+          "original_line": 17,
+          "legacy_fragment": "2-execution-rules",
+          "destination": "docs/implementation-plan/authority-and-gates.md",
+          "destination_fragment": "2-execution-rules"
+        },
+        {
+          "heading": "3. Decisions and Feasibility Gates",
+          "original_line": 28,
+          "legacy_fragment": "3-decisions-and-feasibility-gates",
+          "destination": "docs/implementation-plan/authority-and-gates.md",
+          "destination_fragment": "3-decisions-and-feasibility-gates"
+        },
+        {
+          "heading": "4. Dependency-Ordered Vertical Slices",
+          "original_line": 39,
+          "legacy_fragment": "4-dependency-ordered-vertical-slices",
+          "destination": "docs/implementation-plan/vertical-slices.md",
+          "destination_fragment": "4-dependency-ordered-vertical-slices"
+        },
+        {
+          "heading": "5. Required Test Matrix",
+          "original_line": 57,
+          "legacy_fragment": "5-required-test-matrix",
+          "destination": "docs/implementation-plan/verification-and-risks.md",
+          "destination_fragment": "5-required-test-matrix"
+        },
+        {
+          "heading": "6. Review, Merge and Release Gates",
+          "original_line": 70,
+          "legacy_fragment": "6-review-merge-and-release-gates",
+          "destination": "docs/implementation-plan/verification-and-risks.md",
+          "destination_fragment": "6-review-merge-and-release-gates"
+        },
+        {
+          "heading": "7. Known Risks, Dependencies and Next Action",
+          "original_line": 78,
+          "legacy_fragment": "7-known-risks-dependencies-and-next-action",
+          "destination": "docs/implementation-plan/verification-and-risks.md",
+          "destination_fragment": "7-known-risks-dependencies-and-next-action"
+        }
+      ]
+    },
+    {
+      "source": "docs/specs/local-ci-execution.md",
+      "git_blob_sha": "3a79f907bcb10547c3664f27cfb76b937891d2e0",
+      "original_lines": 244,
+      "children": [
+        {
+          "path": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "title": "Dependencies, workflow discovery, event policy",
+          "start_line": 1,
+          "end_line": 80,
+          "chars": 2431
+        },
+        {
+          "path": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "title": "Event payloads, execution, isolation, secrets, logs",
+          "start_line": 81,
+          "end_line": 180,
+          "chars": 2655
+        },
+        {
+          "path": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "title": "Results, artifacts, compatibility, acceptance 1–12",
+          "start_line": 181,
+          "end_line": 244,
+          "chars": 2495
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Purpose",
+          "original_line": 9,
+          "legacy_fragment": "1-purpose",
+          "destination": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "destination_fragment": "1-purpose"
+        },
+        {
+          "heading": "2. Scope",
+          "original_line": 15,
+          "legacy_fragment": "2-scope",
+          "destination": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "destination_fragment": "2-scope"
+        },
+        {
+          "heading": "3. Dependencies",
+          "original_line": 30,
+          "legacy_fragment": "3-dependencies",
+          "destination": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "destination_fragment": "3-dependencies"
+        },
+        {
+          "heading": "4. Workflow Discovery",
+          "original_line": 44,
+          "legacy_fragment": "4-workflow-discovery",
+          "destination": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "destination_fragment": "4-workflow-discovery"
+        },
+        {
+          "heading": "5. MVP Event Policy",
+          "original_line": 59,
+          "legacy_fragment": "5-mvp-event-policy",
+          "destination": "docs/specs/local-ci-execution/discovery-and-events.md",
+          "destination_fragment": "5-mvp-event-policy"
+        },
+        {
+          "heading": "6. Event Payloads",
+          "original_line": 81,
+          "legacy_fragment": "6-event-payloads",
+          "destination": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "destination_fragment": "6-event-payloads"
+        },
+        {
+          "heading": "7. Execution Flow",
+          "original_line": 105,
+          "legacy_fragment": "7-execution-flow",
+          "destination": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "destination_fragment": "7-execution-flow"
+        },
+        {
+          "heading": "8. Execution Isolation",
+          "original_line": 124,
+          "legacy_fragment": "8-execution-isolation",
+          "destination": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "destination_fragment": "8-execution-isolation"
+        },
+        {
+          "heading": "9. Secrets and Variables",
+          "original_line": 138,
+          "legacy_fragment": "9-secrets-and-variables",
+          "destination": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "destination_fragment": "9-secrets-and-variables"
+        },
+        {
+          "heading": "10. Logs",
+          "original_line": 167,
+          "legacy_fragment": "10-logs",
+          "destination": "docs/specs/local-ci-execution/payloads-and-isolation.md",
+          "destination_fragment": "10-logs"
+        },
+        {
+          "heading": "11. Result Model",
+          "original_line": 181,
+          "legacy_fragment": "11-result-model",
+          "destination": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "destination_fragment": "11-result-model"
+        },
+        {
+          "heading": "12. Artifacts and Cache",
+          "original_line": 193,
+          "legacy_fragment": "12-artifacts-and-cache",
+          "destination": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "destination_fragment": "12-artifacts-and-cache"
+        },
+        {
+          "heading": "13. Compatibility Boundary",
+          "original_line": 204,
+          "legacy_fragment": "13-compatibility-boundary",
+          "destination": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "destination_fragment": "13-compatibility-boundary"
+        },
+        {
+          "heading": "14. Required Acceptance Tests",
+          "original_line": 218,
+          "legacy_fragment": "14-required-acceptance-tests",
+          "destination": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "destination_fragment": "14-required-acceptance-tests"
+        },
+        {
+          "heading": "15. Deferred",
+          "original_line": 235,
+          "legacy_fragment": "15-deferred",
+          "destination": "docs/specs/local-ci-execution/results-and-acceptance.md",
+          "destination_fragment": "15-deferred"
+        }
+      ]
+    },
+    {
+      "source": "docs/specs/git-gating.md",
+      "git_blob_sha": "03e9f0ad152578e09823146c6b2c408d61a199dd",
+      "original_lines": 275,
+      "children": [
+        {
+          "path": "docs/specs/git-gating/modes-and-commit.md",
+          "title": "Gate modes, hooks, staged-index target, automatic validation",
+          "start_line": 1,
+          "end_line": 96,
+          "chars": 2957
+        },
+        {
+          "path": "docs/specs/git-gating/identity-and-outcomes.md",
+          "title": "Post-commit/push identity, fingerprints, staleness, gate outcomes",
+          "start_line": 97,
+          "end_line": 192,
+          "chars": 3408
+        },
+        {
+          "path": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "title": "Bypass boundary, concurrency, hooks, acceptance 1–20",
+          "start_line": 193,
+          "end_line": 275,
+          "chars": 3222
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Purpose",
+          "original_line": 9,
+          "legacy_fragment": "1-purpose",
+          "destination": "docs/specs/git-gating/modes-and-commit.md",
+          "destination_fragment": "1-purpose"
+        },
+        {
+          "heading": "2. Gate Mode",
+          "original_line": 19,
+          "legacy_fragment": "2-gate-mode",
+          "destination": "docs/specs/git-gating/modes-and-commit.md",
+          "destination_fragment": "2-gate-mode"
+        },
+        {
+          "heading": "3. Git Integration",
+          "original_line": 41,
+          "legacy_fragment": "3-git-integration",
+          "destination": "docs/specs/git-gating/modes-and-commit.md",
+          "destination_fragment": "3-git-integration"
+        },
+        {
+          "heading": "4. Commit Gate Target",
+          "original_line": 55,
+          "legacy_fragment": "4-commit-gate-target",
+          "destination": "docs/specs/git-gating/modes-and-commit.md",
+          "destination_fragment": "4-commit-gate-target"
+        },
+        {
+          "heading": "5. Automatic Validation",
+          "original_line": 69,
+          "legacy_fragment": "5-automatic-validation",
+          "destination": "docs/specs/git-gating/modes-and-commit.md",
+          "destination_fragment": "5-automatic-validation"
+        },
+        {
+          "heading": "6. Post-Commit Binding",
+          "original_line": 97,
+          "legacy_fragment": "6-post-commit-binding",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "6-post-commit-binding"
+        },
+        {
+          "heading": "7. Push Gate Target",
+          "original_line": 111,
+          "legacy_fragment": "7-push-gate-target",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "7-push-gate-target"
+        },
+        {
+          "heading": "8. Validation Fingerprint",
+          "original_line": 126,
+          "legacy_fragment": "8-validation-fingerprint",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "8-validation-fingerprint"
+        },
+        {
+          "heading": "9. Result States",
+          "original_line": 146,
+          "legacy_fragment": "9-result-states",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "9-result-states"
+        },
+        {
+          "heading": "10. Staleness",
+          "original_line": 158,
+          "legacy_fragment": "10-staleness",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "10-staleness"
+        },
+        {
+          "heading": "11. Gate Outcomes",
+          "original_line": 174,
+          "legacy_fragment": "11-gate-outcomes",
+          "destination": "docs/specs/git-gating/identity-and-outcomes.md",
+          "destination_fragment": "11-gate-outcomes"
+        },
+        {
+          "heading": "12. Bypass Boundary",
+          "original_line": 193,
+          "legacy_fragment": "12-bypass-boundary",
+          "destination": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "destination_fragment": "12-bypass-boundary"
+        },
+        {
+          "heading": "13. Concurrency and Crash Safety",
+          "original_line": 208,
+          "legacy_fragment": "13-concurrency-and-crash-safety",
+          "destination": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "destination_fragment": "13-concurrency-and-crash-safety"
+        },
+        {
+          "heading": "14. Hook Lifecycle",
+          "original_line": 223,
+          "legacy_fragment": "14-hook-lifecycle",
+          "destination": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "destination_fragment": "14-hook-lifecycle"
+        },
+        {
+          "heading": "15. Required Acceptance Tests",
+          "original_line": 240,
+          "legacy_fragment": "15-required-acceptance-tests",
+          "destination": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "destination_fragment": "15-required-acceptance-tests"
+        },
+        {
+          "heading": "16. Deferred",
+          "original_line": 265,
+          "legacy_fragment": "16-deferred",
+          "destination": "docs/specs/git-gating/bypass-lifecycle-and-acceptance.md",
+          "destination_fragment": "16-deferred"
+        }
+      ]
+    },
+    {
+      "source": "docs/specs/developer-approval-ux.md",
+      "git_blob_sha": "7142ce127105813dcf4c895cddcd8773afed96ea",
+      "original_lines": 253,
+      "children": [
+        {
+          "path": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "title": "Triggers, choices, provider UI, platform and content",
+          "start_line": 1,
+          "end_line": 105,
+          "chars": 3420
+        },
+        {
+          "path": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "title": "Binding, bypass, cancel/headless behavior, durable audit",
+          "start_line": 106,
+          "end_line": 194,
+          "chars": 2605
+        },
+        {
+          "path": "docs/specs/developer-approval-ux/security-and-acceptance.md",
+          "title": "UX, security, acceptance 1–23, deferred work",
+          "start_line": 195,
+          "end_line": 253,
+          "chars": 3531
+        }
+      ],
+      "anchors": [
+        {
+          "heading": "1. Purpose",
+          "original_line": 9,
+          "legacy_fragment": "1-purpose",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "1-purpose"
+        },
+        {
+          "heading": "2. Trigger",
+          "original_line": 17,
+          "legacy_fragment": "2-trigger",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "2-trigger"
+        },
+        {
+          "heading": "3. Developer Choices",
+          "original_line": 27,
+          "legacy_fragment": "3-developer-choices",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "3-developer-choices"
+        },
+        {
+          "heading": "4. Approval Surface",
+          "original_line": 36,
+          "legacy_fragment": "4-approval-surface",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "4-approval-surface"
+        },
+        {
+          "heading": "5. Primary Platform",
+          "original_line": 63,
+          "legacy_fragment": "5-primary-platform",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "5-primary-platform"
+        },
+        {
+          "heading": "6. Approval Content",
+          "original_line": 77,
+          "legacy_fragment": "6-approval-content",
+          "destination": "docs/specs/developer-approval-ux/triggers-and-surface.md",
+          "destination_fragment": "6-approval-content"
+        },
+        {
+          "heading": "7. Request Binding",
+          "original_line": 106,
+          "legacy_fragment": "7-request-binding",
+          "destination": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "destination_fragment": "7-request-binding"
+        },
+        {
+          "heading": "8. Bypass Semantics",
+          "original_line": 120,
+          "legacy_fragment": "8-bypass-semantics",
+          "destination": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "destination_fragment": "8-bypass-semantics"
+        },
+        {
+          "heading": "9. Cancellation and Failure",
+          "original_line": 137,
+          "legacy_fragment": "9-cancellation-and-failure",
+          "destination": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "destination_fragment": "9-cancellation-and-failure"
+        },
+        {
+          "heading": "10. Headless Behavior",
+          "original_line": 159,
+          "legacy_fragment": "10-headless-behavior",
+          "destination": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "destination_fragment": "10-headless-behavior"
+        },
+        {
+          "heading": "11. Local Audit Record",
+          "original_line": 174,
+          "legacy_fragment": "11-local-audit-record",
+          "destination": "docs/specs/developer-approval-ux/binding-and-audit.md",
+          "destination_fragment": "11-local-audit-record"
+        },
+        {
+          "heading": "12. User Experience Rules",
+          "original_line": 195,
+          "legacy_fragment": "12-user-experience-rules",
+          "destination": "docs/specs/developer-approval-ux/security-and-acceptance.md",
+          "destination_fragment": "12-user-experience-rules"
+        },
+        {
+          "heading": "13. Security Boundary",
+          "original_line": 205,
+          "legacy_fragment": "13-security-boundary",
+          "destination": "docs/specs/developer-approval-ux/security-and-acceptance.md",
+          "destination_fragment": "13-security-boundary"
+        },
+        {
+          "heading": "14. Required Acceptance Tests",
+          "original_line": 215,
+          "legacy_fragment": "14-required-acceptance-tests",
+          "destination": "docs/specs/developer-approval-ux/security-and-acceptance.md",
+          "destination_fragment": "14-required-acceptance-tests"
+        },
+        {
+          "heading": "15. Deferred",
+          "original_line": 243,
+          "legacy_fragment": "15-deferred",
+          "destination": "docs/specs/developer-approval-ux/security-and-acceptance.md",
+          "destination_fragment": "15-deferred"
+        }
+      ]
+    }
+  ]
+}
