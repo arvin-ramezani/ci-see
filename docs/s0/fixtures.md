@@ -9,7 +9,7 @@
 - Initialize real Git objects in each repository. Disable signing and unrelated global hooks; use deterministic author/email/date, `-c` overrides and platform-safe paths. Reset only the test-owned temp directory.
 - Stub `act` as a controlled executable that records argv, environment **names** (not secret values), current directory and file paths; emits scripted job output/exit/status; can sleep, spawn children, be killed and fail. No shell-string construction by Go.
 - For event/payload tests, compare normalized fields and selected trees; scrub temporary paths/timestamps or fix clock/IDs. Assert absence of untracked/unstaged file bytes, not merely matching tree hashes.
-- For every non-PASS fixture, assert both normalized status and Git gate's **non-zero** result; assert no reusable PASS, no secret leakage, and cleanup. Unsupported required behavior is not treated as a successful skip.
+- For non-PASS fixtures, assert a **non-zero Git gate result unless** S7 has an authenticated, exact-state, one-time human bypass with a durably saved and verified audit record; assert no reusable PASS, secret leakage, or missing cleanup. Unsupported required behavior is not treated as a successful skip.
 - Test parallel runs with barriers/channels and unique directories, then inject interrupted/partial writes; restore permissions and stop descendants in cleanup. Never require a real developer to approve a test.
 
 ## Fixture IDs, setup/stimulus and expected oracle
