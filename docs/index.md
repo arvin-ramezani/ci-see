@@ -11,6 +11,7 @@ or make a draft/plan authoritative over a product or behavior contract.
 | [Git gating](specs/git-gating.md) | Commit/push exact-state gates | Working on Git integration |
 | [Developer approval UX](specs/developer-approval-ux.md) | Bypass decisions and audit rules | Working on approvals |
 | [Go implementation plan](implementation-plan.md) | Slices, tests and review gates | Planning or implementing slices |
+| [S0 traceability and test plan](s0/index.md) | Requirement mapping, D3 proposals, fixture planning | Working on S0 or planning S1 tests |
 | [Context policy](context-policy.md) | Routing, splitting and preservation | Changing documentation |
 
 ## Navigation and migration
