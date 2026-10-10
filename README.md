@@ -21,3 +21,34 @@ To validate docs locally (Python standard library only):
 ```bash
 python3 scripts/validate_docs.py --check
 ```
+
+## Go CLI foundation (S1)
+
+Requires **Go 1.27.2** for development and CI. CI See's own runtime does not
+require Node.js, npm, `act`, Docker or Git for these S1 informational commands.
+
+```sh
+go build -o ci-see ./cmd/ci-see
+go test ./...
+go vet ./...
+./ci-see --help
+./ci-see --version
+```
+
+On Windows build with `go build -o ci-see.exe ./cmd/ci-see` and invoke
+`.\ci-see.exe`. Go runs natively inside WSL2 as a Linux executable.
+
+`ci-see`, `ci-see init`, and `ci-see status` are **unavailable** in S1 and fail
+without writing hooks, configuration or validation state. They do not run CI.
+
+| Exit | Meaning |
+| --- | --- |
+| `0` | Informational success (`--help`/`--version` only in S1) |
+| `1` | Internal error |
+| `2` | Invalid command/arguments |
+| `3` | Operation not implemented |
+| `4` | Reserved for future blocking Git gates |
+
+Validation of exact-state Git identities, `act` execution, hook integration,
+state persistence and developer approval are deferred to later slices. In S1,
+all core decisions block, including caller-supplied `PASS`.

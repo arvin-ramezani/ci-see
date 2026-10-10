@@ -1,0 +1,72 @@
+name: Go validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Toolchain
+        run: go version && go env GOOS GOARCH
+      - name: Formatting
+        run: |
+          files=$(gofmt -l cmd internal)
+          if [ -n "$files" ]; then echo "$files"; exit 1; fi
+      - name: Build
+        run: go build ./cmd/ci-see
+      - name: Test
+        run: go test ./...
+      - name: Race
+        run: go test -race ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Coverage baseline
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+  windows-native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Toolchain
+        run: go version; go env GOOS GOARCH
+      - name: Build native Windows binary
+        run: go build -o ci-see.exe ./cmd/ci-see
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      - name: CLI smoke test
+        run: |
+          .\ci-see.exe --help
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          .\ci-see.exe --version
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          .\ci-see.exe
+          if ($LASTEXITCODE -ne 3) { exit 1 }
+          .\ci-see.exe init
+          if ($LASTEXITCODE -ne 3) { exit 1 }
+          .\ci-see.exe status
+          if ($LASTEXITCODE -ne 3) { exit 1 }
+          exit 0
+  documentation-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate contextual documentation index
+        run: python3 .agents/skills/context-engineering/scripts/inspect_docs.py . --docs docs --entry docs/index.md --check
