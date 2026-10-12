@@ -2,7 +2,7 @@
   "schema": "ci-see.d3.sanitization-manifest.v1",
   "runId": "d550e6f41bf94191a2a1d808b0f2b9a5",
   "createdAtUtc": "2026-10-12T14:00:54.8956461Z",
-  "reviewStatus": "REVIEWED_DRAFT_PUBLICATION_NOT_AUTHORIZED",
+  "reviewStatus": "PUBLISHED_WITH_OWNER_AUTHORIZATION",
   "originalEvidence": {
     "filename": "evidence.json",
     "sha256": "5D8C1D415171468D8FBDA4A80C300CC0BF7312F65B881C52BA846CA76008F148",
@@ -56,7 +56,7 @@
     "Two private IPv4 identities pseudonymized consistently; loopback/unspecified endpoint addresses retained for evidence context.",
     "All result IDs/statuses and command sequence/exit/timeout outcomes match the received sanitized draft.",
     "Real act execution, host-process outbound isolation, credential/runtime isolation and PASS reuse remain UNVERIFIED/BLOCKED.",
-    "Firewall-rule GUIDs and experimental fixture details remain as recorded; public release requires final owner assessment of remaining metadata.",
+    "Owner authorization: On 2026-10-12, the repository owner explicitly authorized publishing the complete corrected sanitized evidence report and manifest in PR #16 after the integrity and security checks passed. This authorization covers retained firewall identifiers and fixture metadata in the sanitized report. The raw source evidence remains unpublished.",
     "Sanitization does not attest the original report was accurate or that the runner produced it without modification."
   ]
 }
