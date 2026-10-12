@@ -11,6 +11,7 @@
 | --- | --- |
 | Find requirement owner, slice, and planned evidence | [Requirement/acceptance matrix](traceability.md) |
 | Decide staged/pushed state and Git/event edge cases | [D3 compatibility and decision register](snapshots-and-decisions.md) |
+| Read verified D3 feasibility results and pending constraints | [D3 restricted feasibility record](d3-feasibility-record.md) |
 | Construct reproducible failure/safety checks | [Fixture catalog](fixtures.md) |
 | Set up Go tests, hosts, and package seams | [Testing and interfaces](testing-and-interfaces.md) |
 
