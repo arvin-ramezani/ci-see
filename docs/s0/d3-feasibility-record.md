@@ -14,6 +14,8 @@
 **Evidence:** `host-d3-d550e6f41bf94191a2a1d808b0f2b9a5`  
 **Runner SHA-256:** `350AB5BD265F66A18300693E49B721185E5EF92DD113EB5257964A275EF48131`
 
+**Evidence availability:** Externally retained on the owner's Windows test host under the `host-d3-d550e6f41bf94191a2a1d808b0f2b9a5` evidence directory (`evidence.json`). No sanitized immutable report is published in this repository or attached to the PR. The results here summarize owner-provided console output; remote reviewers cannot independently inspect or reproduce the underlying machine report from this reference alone. Do not publish the raw evidence before reviewing it for local paths and sensitive details.
+
 ## Not verified — no PASS claim
 
 - No real `act` metadata, workflow jobs or GitHub Actions event-fidelity tests ran.
