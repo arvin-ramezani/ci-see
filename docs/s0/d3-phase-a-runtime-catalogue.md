@@ -30,6 +30,7 @@ The operator substitutes values only from the approved run manifest. $Invocation
 $ErrorActionPreference = 'Stop'
 $RunId = '<approved-run-id>'
 $ActExe = '<pinned-act.exe>'
+$ExpectedActPath = [IO.Path]::GetFullPath($ActExe)
 $Snapshot = '<fresh-detached-snapshot>'
 $InvocationDir = '<empty-run-owned-directory>'
 $Workflow = '.github/workflows/security-guard.yml' # guard only on first invocation
@@ -94,7 +95,7 @@ foreach ($name in $GitEnvNames) {
 }
 try {
   $PriorConfigEnv = @{}
-  foreach ($entry in Get-ChildItem Env: | Where-Object { $_.Name -match '^GIT_CONFIG_(COUNT|KEY_[0-9]+|VALUE_[0-9]+|PARAMETERS)) {
+  foreach ($entry in Get-ChildItem Env: | Where-Object { $_.Name -match '^GIT_CONFIG_(COUNT|KEY_[0-9]+|VALUE_[0-9]+|PARAMETERS)$' }) {
     $PriorConfigEnv[$entry.Name] = $entry.Value
     [Environment]::SetEnvironmentVariable($entry.Name, $null, 'Process')
   }
@@ -127,13 +128,15 @@ if ($TimedOut) {
   # Normal termination request to this run's verified process tree, then a bounded
   # grace period. taskkill without /F is the normal request; record its exit status.
   $current = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
-  if ($current -and $current.StartTime.ToUniversalTime() -eq $StartedAt) {
+  if ($current -and $current.StartTime.ToUniversalTime() -eq $StartedAt -and
+      $current.Path -and [IO.Path]::GetFullPath($current.Path) -eq $ExpectedActPath) {
     & "$env:SystemRoot\System32\taskkill.exe" /PID $ProcessId /T
     $StopRequestExit = $LASTEXITCODE
     if (-not $proc.WaitForExit($GraceSeconds * 1000)) {
       # Recheck PID/start-time/image against the observer's run manifest before force.
       $current = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
-      if (-not $current -or $current.StartTime.ToUniversalTime() -ne $StartedAt) {
+      if (-not $current -or $current.StartTime.ToUniversalTime() -ne $StartedAt -or
+          -not $current.Path -or [IO.Path]::GetFullPath($current.Path) -ne $ExpectedActPath) {
         throw 'UNRESOLVED: process identity changed; quarantine/restore the VM'
       }
       & "$env:SystemRoot\System32\taskkill.exe" /PID $ProcessId /T /F
