@@ -3,6 +3,8 @@
 **Status:** Proposed Phase B feasibility procedure only; not executed in Phase A.  
 **Authority:** [D3 Phase A plan](d3-phase-a-verification-plan.md), [Git gating specification](../specs/git-gating.md), [fixture catalog](fixtures.md).
 
+**Growth decision: KEEP (308 lines).** The Windows-native and WSL2 procedures are paired legs of the same Git identity and hook-bypass fixtures. They share fixture purpose, safety requirements, evidence, and acceptance criteria; keeping them together supports direct platform comparison and keeps each leg beside its shared controls. Splitting them would fragment that comparison and duplicate shared requirements.
+
 Use a fresh disposable repository and isolated evidence directory for each Windows-native and WSL2 leg. Do not use the product repository. This fixture demonstrates native Git behavior only; it cannot prove CI See enforcement or make hooks tamper-proof.
 
 ## Tree and event identity oracle
