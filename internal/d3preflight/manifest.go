@@ -97,12 +97,14 @@ type Environment struct {
 	SnapshotID            string `json:"snapshot_id"`
 	GuestID               string `json:"guest_id"`
 	ExecutionLeg          string `json:"execution_leg"`
+	ContainerNetwork      string `json:"container_network"`
 	WorkspaceSHA256       string `json:"workspace_sha256"`
 	EnvironmentProfileSHA string `json:"environment_profile_sha256"`
 }
 
 type Workflow struct {
 	Path          string `json:"path"`
+	EventName     string `json:"event_name"`
 	ContentSHA256 string `json:"content_sha256"`
 	EventSHA256   string `json:"event_sha256"`
 }
@@ -117,13 +119,16 @@ type Artifact struct {
 	ContentSHA256 string `json:"content_sha256"`
 	OCIDigest     string `json:"oci_digest,omitempty"`
 	Platform      string `json:"platform,omitempty"`
+	ActPlatform   string `json:"act_platform,omitempty"`
 }
 
 type Command struct {
-	Stage          string   `json:"stage"`
-	ArtifactID     string   `json:"artifact_id"`
-	Argv           []string `json:"argv"`
-	TimeoutSeconds int64    `json:"timeout_seconds"`
+	Stage             string   `json:"stage"`
+	ArtifactID        string   `json:"artifact_id"`
+	ImageArtifactID   string   `json:"image_artifact_id,omitempty"`
+	ActionArtifactIDs []string `json:"action_artifact_ids,omitempty"`
+	Argv              []string `json:"argv"`
+	TimeoutSeconds    int64    `json:"timeout_seconds"`
 }
 
 type Destination struct {
@@ -221,13 +226,13 @@ var jsonObjectFields = map[string]map[string]string{
 		"repository": "", "pull_request": "", "head_sha": "", "tree_sha": "", "run_id": "", "nonce": "", "issued_at": "", "expires_at": "",
 	},
 	"environment": {
-		"host_id": "", "vm_id": "", "snapshot_id": "", "guest_id": "", "execution_leg": "", "workspace_sha256": "", "environment_profile_sha256": "",
+		"host_id": "", "vm_id": "", "snapshot_id": "", "guest_id": "", "execution_leg": "", "container_network": "", "workspace_sha256": "", "environment_profile_sha256": "",
 	},
-	"workflow": {"path": "", "content_sha256": "", "event_sha256": ""},
+	"workflow": {"path": "", "event_name": "", "content_sha256": "", "event_sha256": ""},
 	"artifact": {
-		"id": "", "kind": "", "name": "", "source": "", "revision": "", "tree_sha": "", "content_sha256": "", "oci_digest": "", "platform": "",
+		"id": "", "kind": "", "name": "", "source": "", "revision": "", "tree_sha": "", "content_sha256": "", "oci_digest": "", "platform": "", "act_platform": "",
 	},
-	"command":     {"stage": "", "artifact_id": "", "argv": "string[]", "timeout_seconds": ""},
+	"command":     {"stage": "", "artifact_id": "", "image_artifact_id": "", "action_artifact_ids": "string[]", "argv": "string[]", "timeout_seconds": ""},
 	"destination": {"stage": "", "host": "", "port": "", "protocol": "", "purpose": ""},
 	"cleanup":     {"run_label": "", "rollback_snapshot_id": "", "evidence_custody_id": ""},
 }
@@ -354,6 +359,7 @@ func validManifest(manifest Manifest) bool {
 	}
 	if manifest.CredentialPolicy != "dummy-only" || !validID(manifest.Cleanup.RunLabel) ||
 		manifest.Cleanup.RunLabel != "ci-see-d3-"+manifest.Identity.RunID ||
+		manifest.Environment.ContainerNetwork != manifest.Cleanup.RunLabel ||
 		manifest.Cleanup.RollbackSnapshot != manifest.Environment.SnapshotID || !validID(manifest.Cleanup.EvidenceCustodyID) {
 		return false
 	}
@@ -367,6 +373,7 @@ func validManifest(manifest Manifest) bool {
 		}
 		artifacts[artifact.ID] = artifact
 	}
+	executionCommands := 0
 	for _, command := range manifest.Commands {
 		if !validStage(command.Stage) || command.TimeoutSeconds < 1 || command.TimeoutSeconds > int64(maxTimeout/time.Second) || len(command.Argv) == 0 || len(command.Argv) > 128 {
 			return false
@@ -375,11 +382,22 @@ func validManifest(manifest Manifest) bool {
 		if !exists || artifact.Kind != "tool" || command.Argv[0] != artifact.Name {
 			return false
 		}
+		if command.Stage == "execution" {
+			executionCommands++
+			if artifact.Name != "act" || !validActExecutionCommand(command, artifacts, manifest.Environment, manifest.Workflow, manifest.Identity.RunID) {
+				return false
+			}
+		} else if artifact.Name == "act" || command.ImageArtifactID != "" || len(command.ActionArtifactIDs) > 0 {
+			return false
+		}
 		for _, arg := range command.Argv {
 			if len(arg) > 8192 || !validText(arg) {
 				return false
 			}
 		}
+	}
+	if executionCommands != 1 {
+		return false
 	}
 	for _, destination := range manifest.Destinations {
 		if !validStage(destination.Stage) || !validHost(destination.Host) || destination.Port < 1 || destination.Port > 65535 ||
@@ -406,11 +424,12 @@ func validIdentity(identity Identity) bool {
 func validEnvironment(environment Environment) bool {
 	return validID(environment.HostID) && validID(environment.VMID) && validID(environment.SnapshotID) && validID(environment.GuestID) &&
 		(environment.ExecutionLeg == "windows-native" || environment.ExecutionLeg == "wsl2") &&
+		validID(environment.ContainerNetwork) && environment.ContainerNetwork != "host" &&
 		lowerHex(environment.WorkspaceSHA256, 64) && lowerHex(environment.EnvironmentProfileSHA, 64)
 }
 
 func validWorkflow(workflow Workflow) bool {
-	if !lowerHex(workflow.ContentSHA256, 64) || !lowerHex(workflow.EventSHA256, 64) || workflow.Path == "" || strings.Contains(workflow.Path, "\\") || strings.HasPrefix(workflow.Path, "/") {
+	if !validID(workflow.EventName) || !lowerHex(workflow.ContentSHA256, 64) || !lowerHex(workflow.EventSHA256, 64) || workflow.Path == "" || strings.Contains(workflow.Path, "\\") || strings.HasPrefix(workflow.Path, "/") {
 		return false
 	}
 	for _, segment := range strings.Split(workflow.Path, "/") {
@@ -427,17 +446,154 @@ func validArtifact(artifact Artifact) bool {
 	}
 	switch artifact.Kind {
 	case "tool":
-		return validID(artifact.Revision) && artifact.TreeSHA == "" && artifact.OCIDigest == "" && artifact.Platform == ""
+		return validID(artifact.Revision) && artifact.TreeSHA == "" && artifact.OCIDigest == "" && artifact.Platform == "" && artifact.ActPlatform == ""
 	case "action":
-		return lowerHex(artifact.Revision, 40) && lowerHex(artifact.TreeSHA, 40) && artifact.OCIDigest == "" && artifact.Platform == ""
+		return lowerHex(artifact.Revision, 40) && lowerHex(artifact.TreeSHA, 40) && artifact.OCIDigest == "" && artifact.Platform == "" && artifact.ActPlatform == ""
 	case "image":
-		if len(artifact.OCIDigest) != len("sha256:")+64 || !strings.HasPrefix(artifact.OCIDigest, "sha256:") || !lowerHex(strings.TrimPrefix(artifact.OCIDigest, "sha256:"), 64) || !validPlatform(artifact.Platform) {
+		if !validImageSource(artifact.Source) || len(artifact.OCIDigest) != len("sha256:")+64 ||
+			!strings.HasPrefix(artifact.OCIDigest, "sha256:") || !lowerHex(strings.TrimPrefix(artifact.OCIDigest, "sha256:"), 64) ||
+			!validPlatform(artifact.Platform) || !validID(artifact.ActPlatform) {
 			return false
 		}
 		return artifact.ContentSHA256 == strings.TrimPrefix(artifact.OCIDigest, "sha256:") && artifact.Revision == "" && artifact.TreeSHA == ""
 	default:
 		return false
 	}
+}
+
+func validImageSource(source string) bool {
+	return validSource(source) && !strings.Contains(source, "://") && !strings.ContainsAny(source, "?#*") &&
+		!strings.HasPrefix(source, "/") && !strings.HasSuffix(source, "/")
+}
+
+func validActExecutionCommand(command Command, artifacts map[string]Artifact, environment Environment, workflow Workflow, runID string) bool {
+	image, exists := artifacts[command.ImageArtifactID]
+	if !exists || image.Kind != "image" || environment.ContainerNetwork != "ci-see-d3-"+runID {
+		return false
+	}
+	imageCount := 0
+	for artifactID, artifact := range artifacts {
+		if artifact.Kind == "image" {
+			imageCount++
+			if artifactID != command.ImageArtifactID {
+				return false
+			}
+		}
+	}
+	if imageCount != 1 {
+		return false
+	}
+	declaredActions := make(map[string]struct{}, len(command.ActionArtifactIDs))
+	for _, actionID := range command.ActionArtifactIDs {
+		action, exists := artifacts[actionID]
+		if !exists || action.Kind != "action" {
+			return false
+		}
+		if _, duplicate := declaredActions[actionID]; duplicate {
+			return false
+		}
+		declaredActions[actionID] = struct{}{}
+	}
+	for artifactID, artifact := range artifacts {
+		if artifact.Kind == "action" {
+			if _, declared := declaredActions[artifactID]; !declared {
+				return false
+			}
+		}
+	}
+	if len(declaredActions) != len(command.ActionArtifactIDs) {
+		return false
+	}
+	expectedImage := image.ActPlatform + "=" + image.Source + "@" + image.OCIDigest
+	expectedSecret := "GITHUB_TOKEN=CISEE-DUMMY-" + runID
+
+	counts := make(map[string]int)
+	values := make(map[string]string)
+	positionals := make([]string, 0, 1)
+	for index := 1; index < len(command.Argv); index++ {
+		name, inlineValue, hasInlineValue, isFlag := splitActFlag(command.Argv[index])
+		if !isFlag {
+			positionals = append(positionals, command.Argv[index])
+			continue
+		}
+
+		key := name
+		needsValue := true
+		switch name {
+		case "directory", "action-cache-path", "network", "container-daemon-socket", "env-file", "secret-file", "var-file", "input-file":
+		case "workflows", "W":
+			key = "workflows"
+		case "eventpath", "e":
+			key = "eventpath"
+		case "platform", "P":
+			key = "platform"
+		case "s":
+			key = "secret"
+		case "pull", "rebuild":
+			if !hasInlineValue || inlineValue != "false" {
+				return false
+			}
+			values[name] = inlineValue
+			counts[name]++
+			continue
+		case "action-offline-mode":
+			if hasInlineValue {
+				return false
+			}
+			needsValue = false
+			counts[name]++
+			continue
+		default:
+			// Reject unreviewed act flags, including container-option overrides.
+			return false
+		}
+
+		var value string
+		if hasInlineValue {
+			value = inlineValue
+		} else {
+			if !needsValue || index+1 >= len(command.Argv) {
+				return false
+			}
+			index++
+			value = command.Argv[index]
+		}
+		counts[key]++
+		values[key] = value
+	}
+
+	for _, key := range []string{
+		"directory", "workflows", "eventpath", "action-cache-path", "platform", "network", "container-daemon-socket",
+		"pull", "rebuild", "action-offline-mode", "env-file", "secret-file", "var-file", "input-file", "secret",
+	} {
+		if counts[key] != 1 {
+			return false
+		}
+	}
+	for _, key := range []string{"directory", "eventpath", "action-cache-path", "env-file", "secret-file", "var-file", "input-file"} {
+		if values[key] == "" || !validText(values[key]) {
+			return false
+		}
+	}
+	return values["workflows"] == workflow.Path && values["platform"] == expectedImage &&
+		values["network"] == environment.ContainerNetwork && values["container-daemon-socket"] == "-" &&
+		values["pull"] == "false" && values["rebuild"] == "false" && values["secret"] == expectedSecret &&
+		len(positionals) == 1 && positionals[0] == workflow.EventName
+}
+
+func splitActFlag(argument string) (name, value string, inline, isFlag bool) {
+	if len(argument) < 2 || argument[0] != '-' {
+		return "", "", false, false
+	}
+	name = argument[1:]
+	if name[0] == '-' {
+		name = name[1:]
+	}
+	name, value, inline = strings.Cut(name, "=")
+	if name == "" {
+		return "", "", false, false
+	}
+	return name, value, inline, true
 }
 
 func validSource(source string) bool {
@@ -615,4 +771,3 @@ func AssessCleanup(runID string, inventoryComplete bool, resources []ResourceObs
 	}
 	return CleanupEvidenceComplete
 }
-

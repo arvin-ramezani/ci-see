@@ -176,6 +176,116 @@ func TestValidateRejectsInvalidManifestSemantics(t *testing.T) {
 	}
 }
 
+func TestValidateRequiresActExecutionPolicyBinding(t *testing.T) {
+	now := time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name string
+		edit func(*testing.T, *Manifest)
+	}{
+		{"missing image artifact binding", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].ImageArtifactID = ""
+		}},
+		{"wrong image artifact kind", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].ImageArtifactID = "checkout-action"
+		}},
+		{"unselected image artifact", func(_ *testing.T, manifest *Manifest) {
+			extra := manifest.Artifacts[2]
+			extra.ID = "other-runner-image"
+			extra.Name = "other-runner"
+			extra.Source = "registry.example.test/other-runner"
+			manifest.Artifacts = append(manifest.Artifacts, extra)
+		}},
+		{"action artifact not linked to execution", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].ActionArtifactIDs = nil
+		}},
+		{"wrong action artifact link", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].ActionArtifactIDs = []string{"runner-image"}
+		}},
+		{"unselected action artifact", func(_ *testing.T, manifest *Manifest) {
+			extra := manifest.Artifacts[1]
+			extra.ID = "other-action"
+			manifest.Artifacts = append(manifest.Artifacts, extra)
+		}},
+		{"missing runner image selector", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeOption(manifest.Commands[0].Argv, "-P")
+		}},
+		{"mismatched runner image digest", func(t *testing.T, manifest *Manifest) {
+			if !replaceOptionValue(manifest.Commands[0].Argv, "-P", "ubuntu-22.04=registry.example.test/runner@sha256:"+strings.Repeat("0", 64)) {
+				t.Fatal("platform selector not found")
+			}
+		}},
+		{"mismatched runner platform", func(_ *testing.T, manifest *Manifest) {
+			manifest.Artifacts[2].ActPlatform = "ubuntu-20.04"
+		}},
+		{"host network", func(t *testing.T, manifest *Manifest) {
+			if !replaceOptionValue(manifest.Commands[0].Argv, "--network", "host") {
+				t.Fatal("network option not found")
+			}
+		}},
+		{"inline host network override", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = append(manifest.Commands[0].Argv, "--network=host")
+		}},
+		{"missing network option", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeOption(manifest.Commands[0].Argv, "--network")
+		}},
+		{"missing daemon socket disable", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeOption(manifest.Commands[0].Argv, "--container-daemon-socket")
+		}},
+		{"daemon socket enabled", func(t *testing.T, manifest *Manifest) {
+			if !replaceOptionValue(manifest.Commands[0].Argv, "--container-daemon-socket", "/var/run/docker.sock") {
+				t.Fatal("daemon socket option not found")
+			}
+		}},
+		{"pull omitted", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeArgument(manifest.Commands[0].Argv, "--pull=false")
+		}},
+		{"pull enabled", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = replaceArgument(manifest.Commands[0].Argv, "--pull=false", "--pull=true")
+		}},
+		{"rebuild omitted", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeArgument(manifest.Commands[0].Argv, "--rebuild=false")
+		}},
+		{"rebuild enabled", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = replaceArgument(manifest.Commands[0].Argv, "--rebuild=false", "--rebuild=true")
+		}},
+		{"offline action mode omitted", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeArgument(manifest.Commands[0].Argv, "--action-offline-mode")
+		}},
+		{"unreviewed container override", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = append(manifest.Commands[0].Argv, "--container-options", "--network=host")
+		}},
+		{"implicit working directory", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeOption(manifest.Commands[0].Argv, "--directory")
+		}},
+		{"workflow path mismatch", func(t *testing.T, manifest *Manifest) {
+			if !replaceOptionValue(manifest.Commands[0].Argv, "-W", ".github/workflows/other.yml") {
+				t.Fatal("workflow option not found")
+			}
+		}},
+		{"event mismatch", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv[len(manifest.Commands[0].Argv)-1] = "pull_request"
+		}},
+		{"non-dummy credential", func(t *testing.T, manifest *Manifest) {
+			if !replaceOptionValue(manifest.Commands[0].Argv, "-s", "GITHUB_TOKEN=not-a-dummy") {
+				t.Fatal("secret option not found")
+			}
+		}},
+		{"secret file omitted", func(_ *testing.T, manifest *Manifest) {
+			manifest.Commands[0].Argv = removeOption(manifest.Commands[0].Argv, "--secret-file")
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			manifest := fixtureManifest(now.Add(-time.Hour), now.Add(time.Hour))
+			test.edit(t, &manifest)
+			input, _ := signManifest(t, manifest, now)
+			if result := Validate(input); result.Status != StatusBlocked || result.Code != "manifest_invalid" {
+				t.Fatalf("result = %+v", result)
+			}
+		})
+	}
+}
+
 func TestAssessDeadlineIsDeterministic(t *testing.T) {
 	now := time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC)
 	tests := []struct {
@@ -282,18 +392,70 @@ func fixtureManifest(issued, expires time.Time) Manifest {
 		},
 		Environment: Environment{
 			HostID: "host-01", VMID: "vm-01", SnapshotID: "snapshot-01", GuestID: "guest-01", ExecutionLeg: "windows-native",
-			WorkspaceSHA256: strings.Repeat("d", 64), EnvironmentProfileSHA: strings.Repeat("e", 64),
+			ContainerNetwork: "ci-see-d3-" + fixtureRunID,
+			WorkspaceSHA256:  strings.Repeat("d", 64), EnvironmentProfileSHA: strings.Repeat("e", 64),
 		},
-		Workflow: Workflow{Path: ".github/workflows/ci.yml", ContentSHA256: strings.Repeat("1", 64), EventSHA256: strings.Repeat("2", 64)},
+		Workflow: Workflow{Path: ".github/workflows/ci.yml", EventName: "push", ContentSHA256: strings.Repeat("1", 64), EventSHA256: strings.Repeat("2", 64)},
 		Artifacts: []Artifact{
 			{ID: "act-binary", Kind: "tool", Name: "act", Source: "https://github.com/nektos/act", Revision: "v0.2.81", ContentSHA256: strings.Repeat("3", 64)},
 			{ID: "checkout-action", Kind: "action", Name: "actions-checkout", Source: "https://github.com/actions/checkout", Revision: strings.Repeat("4", 40), TreeSHA: strings.Repeat("5", 40), ContentSHA256: strings.Repeat("6", 64)},
-			{ID: "runner-image", Kind: "image", Name: "runner", Source: "registry.example.test/runner", ContentSHA256: imageHash, OCIDigest: "sha256:" + imageHash, Platform: "linux/amd64"},
+			{ID: "runner-image", Kind: "image", Name: "runner", Source: "registry.example.test/runner", ContentSHA256: imageHash, OCIDigest: "sha256:" + imageHash, Platform: "linux/amd64", ActPlatform: "ubuntu-22.04"},
 		},
-		Commands:         []Command{{Stage: "execution", ArtifactID: "act-binary", Argv: []string{"act", "--directory", "snapshot"}, TimeoutSeconds: 300}},
+		Commands: []Command{{
+			Stage: "execution", ArtifactID: "act-binary", ImageArtifactID: "runner-image", ActionArtifactIDs: []string{"checkout-action"},
+			Argv: []string{
+				"act", "--directory", "snapshot", "-W", ".github/workflows/ci.yml", "-e", "event.json", "--action-cache-path", "action-cache",
+				"-P", "ubuntu-22.04=registry.example.test/runner@sha256:" + imageHash, "--network", "ci-see-d3-" + fixtureRunID,
+				"--container-daemon-socket", "-", "--pull=false", "--rebuild=false", "--action-offline-mode",
+				"--env-file", "empty.env", "--secret-file", "empty.secrets", "--var-file", "empty.vars", "--input-file", "empty.input",
+				"-s", "GITHUB_TOKEN=CISEE-DUMMY-" + fixtureRunID, "push",
+			},
+			TimeoutSeconds: 300,
+		}},
 		Destinations:     []Destination{},
 		Cleanup:          Cleanup{RunLabel: "ci-see-d3-" + fixtureRunID, RollbackSnapshot: "snapshot-01", EvidenceCustodyID: "evidence-01"},
 		CredentialPolicy: "dummy-only",
 	}
 }
 
+func replaceOptionValue(argv []string, option, value string) bool {
+	for index, arg := range argv {
+		if arg == option && index+1 < len(argv) {
+			argv[index+1] = value
+			return true
+		}
+	}
+	return false
+}
+
+func removeOption(argv []string, option string) []string {
+	for index, arg := range argv {
+		if arg == option {
+			end := index + 1
+			if end < len(argv) {
+				end++
+			}
+			return append(append([]string(nil), argv[:index]...), argv[end:]...)
+		}
+	}
+	return argv
+}
+
+func removeArgument(argv []string, argument string) []string {
+	for index, arg := range argv {
+		if arg == argument {
+			return append(append([]string(nil), argv[:index]...), argv[index+1:]...)
+		}
+	}
+	return argv
+}
+
+func replaceArgument(argv []string, old, replacement string) []string {
+	for index, arg := range argv {
+		if arg == old {
+			argv[index] = replacement
+			return argv
+		}
+	}
+	return argv
+}
