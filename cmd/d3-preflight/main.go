@@ -98,11 +98,16 @@ func run(args []string, stdout, stderr io.Writer, keys map[string]ed25519.Public
 
 func hasDuplicateFlags(args []string) bool {
 	seen := make(map[string]struct{}, len(args))
-	for _, arg := range args {
-		if !strings.HasPrefix(arg, "--") {
+	for index := 0; index < len(args); index++ {
+		arg := args[index]
+		if len(arg) < 2 || arg[0] != '-' {
 			continue
 		}
-		name, _, _ := strings.Cut(strings.TrimPrefix(arg, "--"), "=")
+		nameArg := arg[1:]
+		if nameArg[0] == '-' {
+			nameArg = nameArg[1:]
+		}
+		name, _, hasInlineValue := strings.Cut(nameArg, "=")
 		if name == "" {
 			continue
 		}
@@ -110,8 +115,20 @@ func hasDuplicateFlags(args []string) bool {
 			return true
 		}
 		seen[name] = struct{}{}
+		if !hasInlineValue && isValueFlag(name) && index+1 < len(args) {
+			index++
+		}
 	}
 	return false
+}
+
+func isValueFlag(name string) bool {
+	switch name {
+	case "manifest", "approval", "repository", "pr", "head-sha", "tree-sha", "run-id", "host-id", "vm-id", "snapshot-id", "guest-id", "leg":
+		return true
+	default:
+		return false
+	}
 }
 
 func readBounded(path string, limit int) ([]byte, bool) {
@@ -133,4 +150,3 @@ func printResult(writer io.Writer, status, code string, exit int) int {
 	}
 	return exit
 }
-

@@ -88,11 +88,13 @@ func TestRunRejectsExtraAndMalformedArguments(t *testing.T) {
 			t.Errorf("args=%q exit=%d stderr=%q", args, code, stderr.String())
 		}
 	}
-	args, _, _ := writeFixtureFiles(t)
-	args = append(args, "--pr", "17")
-	var stdout, stderr bytes.Buffer
-	if code := run(args, &stdout, &stderr, nil, d3preflight.Clock{}); code != exitUsage || !strings.Contains(stderr.String(), "duplicate_argument") {
-		t.Fatalf("duplicate flag exit=%d stderr=%q", code, stderr.String())
+	for _, duplicate := range [][]string{{"--pr", "17"}, {"-pr", "17"}, {"--pr=18", "-pr=19"}} {
+		args, _, _ := writeFixtureFiles(t)
+		args = append(args, duplicate...)
+		var stdout, stderr bytes.Buffer
+		if code := run(args, &stdout, &stderr, nil, d3preflight.Clock{}); code != exitUsage || !strings.Contains(stderr.String(), "duplicate_argument") {
+			t.Errorf("duplicate args=%q exit=%d stderr=%q", duplicate, code, stderr.String())
+		}
 	}
 }
 
@@ -166,4 +168,3 @@ func writeFixtureFiles(t *testing.T) ([]string, ed25519.PublicKey, time.Time) {
 	}
 	return args, publicKey, now
 }
-
