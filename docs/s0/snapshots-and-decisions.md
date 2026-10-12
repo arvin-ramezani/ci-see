@@ -35,7 +35,7 @@
 
 | Gate | S0 status | Required next evidence and owner review |
 | --- | --- | --- |
-| **D3** snapshot/event | **PARTIAL; not closed.** Exact tree/tip model proposed. | S2 feasibility spike: effective index for path commits and `-a`; submodules/materialization safety; PR event fields; user-hook ordering/index mutation. Review against all relevant acceptance tests; record ADR if a required scenario cannot be supported. |
+| **D3** snapshot/event | **PARTIAL; not closed.** [Restricted Git/Docker feasibility checks passed](d3-feasibility-record.md); real `act` was not executed. | S2 may implement Git-only Go snapshots/event fixtures without enabling `act`. Remaining event fidelity, hook/caller enforcement, network isolation and PASS reuse require implementation tests, separate security approval and full acceptance review. |
 | **D1** human approval | **OPEN**, separate S6 feasibility | Threat model, authenticated one-time provider, Windows/WSL2 IPC/automation attacks; never enable bypass without verified provider. |
 | **D2** remote duplicate CI | **OPEN**, separate S8 gate | Reviewed suppression mechanism satisfying FR-10 without weakening hosted required checks; otherwise no completed MVP. |
 | **D4** release/platforms | **OPEN**, separate S9 gate | Explicit GOOS/GOARCH, cancellation strategy, binary naming, versions/dependency minimums; Windows native and WSL2 independently checked. |
