@@ -23,3 +23,9 @@
 **Sequence:** S0 → S1 → S2 → S3 → S4 → S5 → S7 → S8 → S9 → S10. S6 security feasibility begins alongside S0/S1 and must PASS its intended security boundary before S7. D2 analysis can begin in parallel but blocks S8 and MVP acceptance.
 
 <!-- END ORIGINAL CONTRACT -->
+
+## Slice clarification — 2026-10-12
+
+- **S2:** Implement Go repository discovery, event context and immutable Git snapshots using real disposable Git tests and fake-`act` adapters. Keep real-`act` execution disabled until its separate security gate passes; do not claim the S2 acceptance matrix is complete from mocks alone.
+- **S4:** Support download-on-miss and verified cache reuse through approved `act`/container-runtime facilities. Test cold and warm caches and dependency failures; no custom caching engine. Separate download permissions from execution networking and require reviewed security controls before any real `act` job.
+- **Release:** No partial slice or successful restricted D3 check changes `PRODUCTION_READY = NO`.
