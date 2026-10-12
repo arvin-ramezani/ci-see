@@ -69,3 +69,16 @@ The following remain outside this spec:
 - native Windows/macOS hosted-runner emulation;
 - advanced artifact/cache management.
 <!-- END ORIGINAL CONTRACT -->
+
+## Dependency acquisition and reuse — 2026-10-12
+
+**Owner decision:** Missing workflow dependencies should be downloaded when needed, then reused from a local cache. This clarifies §3 and §12 without requiring CI See to build its own dependency/cache engine.
+
+- Reuse previously fetched actions, runner images and other compatible dependencies only when their identity and integrity can be established. Stale, changed, untrusted or corrupt cache entries are not executable.
+- On a cache miss, acquire the dependency from an approved source with controlled network access; verify the expected commit, digest or other approved provenance/integrity policy **before execution**, then reuse the cached copy. A cache miss alone is not a CI failure.
+- If acquisition, trust verification, or required network access fails, report **INCOMPLETE**, never PASS; do not silently substitute a different version.
+- Treat dependency acquisition and execution as distinct security boundaries. Restricted offline/D3 verification remains offline, while normal CI See operation may download missing dependencies under a separately reviewed network policy. Some workflow steps need runtime networking; do not promise that prefetching alone makes all workflows offline-compatible.
+- Preserve the requirement that users install `act` and Docker or an equivalent runtime; this decision does not authorize automatic installation of host tools or create an independent CI See cache service.
+- Before real-`act` acceptance, test cold-cache acquisition, warm-cache reuse, pinned-identity changes, invalid sources, corrupted cache entries, interrupted downloads, missing network access and non-PASS failures. Verify that credentials are not implicitly exposed to download subprocesses.
+
+This is a behavior decision, **not evidence that dependency acquisition or network security has been implemented**.
