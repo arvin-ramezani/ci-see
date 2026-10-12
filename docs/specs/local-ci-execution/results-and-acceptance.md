@@ -69,3 +69,20 @@ The following remain outside this spec:
 - native Windows/macOS hosted-runner emulation;
 - advanced artifact/cache management.
 <!-- END ORIGINAL CONTRACT -->
+
+## Dependency acquisition and reuse (2026-10-12)
+
+**Owner decision:** Missing workflow dependencies should be downloaded when needed, then reused from a local cache. This clarifies §3 and §12 without requiring CI See to build its own dependency/cache engine.
+
+- Reuse previously fetched actions, runner images and other compatible dependencies only when their identity and integrity can be established. Stale, changed, untrusted or corrupt cache entries are not executable.
+- On a cache miss, acquire the dependency from an approved source with controlled network access; verify the expected commit, digest or other approved provenance/integrity policy **before execution**, then reuse the cached copy. A cache miss alone is not a CI failure.
+- **Actions:** For an immutable `uses: owner/repo@<full-commit-SHA>` reference, verify the cached Git object/tree and materialized files match that commit and a trusted origin. For tag/branch references, resolve the reference at an approved source to a full commit SHA; record the resolved identity and verify it before reuse. If the reference later resolves differently, treat it as a new dependency and invalidate affected prior results. Do not trust a matching cache directory name alone.
+- **Images:** Resolve image references at an approved registry to an immutable OCI manifest digest (for the selected platform), then verify the local image corresponds to that trusted digest before use or reuse. A mutable tag, local image name, or image ID alone does not establish trusted provenance; a changed digest invalidates dependent results.
+- **Enforcement boundary:** Use the existing `act`/Git/Docker download and cache facilities, not a new CI See cache engine. Before executing untrusted workflow code, the Go adapter must validate authoritative expected identities against the actual cached artifacts; if the engine cannot expose evidence or enforce the selected verified artifacts, stop as INCOMPLETE. Do not allow an implicit `act`/Docker pull or cache substitution to bypass this check.
+- **Evidence and failures:** Record non-secret source, resolved commit/digest, platform and verification outcome in the execution fingerprint; secrets and tokens must not be persisted. Reject cache poisoning, mismatched refs or digests, unsupported identity formats, unverifiable downloaded content and missing authorization with INCOMPLETE.
+- If acquisition, trust verification, or required network access fails, report **INCOMPLETE**, never PASS; do not silently substitute a different version.
+- Treat dependency acquisition and execution as distinct security boundaries. Restricted offline/D3 verification remains offline, while normal CI See operation may download missing dependencies under a separately reviewed network policy. Some workflow steps need runtime networking; do not promise that prefetching alone makes all workflows offline-compatible.
+- Preserve the requirement that users install `act` and Docker or an equivalent runtime; this decision does not authorize automatic installation of host tools or create an independent CI See cache service.
+- Before real-`act` acceptance, test cold-cache acquisition, warm-cache reuse, pinned-identity changes, invalid sources, corrupted cache entries, interrupted downloads, missing network access and non-PASS failures. Verify that credentials are not implicitly exposed to download subprocesses.
+
+This is a behavior decision, **not evidence that dependency acquisition or network security has been implemented**.

@@ -56,6 +56,10 @@ Use only the sections relevant to the current task.
 
 [Read the complete section](local-ci-execution/results-and-acceptance.md#12-artifacts-and-cache).
 
+### Dependency acquisition policy (2026-10-12)
+
+[Read download-on-miss and verified cache reuse policy](local-ci-execution/results-and-acceptance.md#dependency-acquisition-and-reuse-2026-10-12).
+
 ## 13. Compatibility Boundary
 
 [Read the complete section](local-ci-execution/results-and-acceptance.md#13-compatibility-boundary).

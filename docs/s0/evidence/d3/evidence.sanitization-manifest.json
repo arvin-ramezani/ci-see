@@ -1,0 +1,62 @@
+{
+  "schema": "ci-see.d3.sanitization-manifest.v1",
+  "runId": "d550e6f41bf94191a2a1d808b0f2b9a5",
+  "createdAtUtc": "2026-10-12T14:00:54.8956461Z",
+  "reviewStatus": "PUBLISHED_WITH_OWNER_AUTHORIZATION",
+  "originalEvidence": {
+    "filename": "evidence.json",
+    "sha256": "5D8C1D415171468D8FBDA4A80C300CC0BF7312F65B881C52BA846CA76008F148",
+    "bytes": 265688
+  },
+  "runner": {
+    "filename": "RunD3HostVerification.ps1",
+    "sha256": "350AB5BD265F66A18300693E49B721185E5EF92DD113EB5257964A275EF48131",
+    "locallyVerified": true
+  },
+  "sanitizedEvidence": {
+    "filename": "evidence.sanitized.json",
+    "sha256": "F5BD9C6AD01BEECFAC8DDCC9A20EC6B49A6D8B86474C8FFDCE8E569E808425FC",
+    "bytes": 264704
+  },
+  "preserved": {
+    "results": 52,
+    "commands": 174,
+    "statuses": {
+      "PASS": 26,
+      "UNVERIFIED": 26
+    },
+    "resultIdentityAndStatusChecked": true,
+    "commandIdentityAndOutcomeChecked": true
+  },
+  "redactionMatches": {
+    "WindowsHome": 364,
+    "WindowsPath": 159,
+    "WslWindowsHome": 2,
+    "LinuxHome": 0,
+    "Email": 10,
+    "PublicIPv4": 148,
+    "UrlUserInfo": 0,
+    "Token": 0,
+    "Bearer": 0,
+    "PrivateKey": 0,
+    "Assignment": 0,
+    "SensitiveField": 2,
+    "SecretArgument": 0
+  },
+  "policy": "Private paths, email addresses, public IPv4 addresses and recognized secret values are pseudonymized; loopback/private/test IPv4 and reviewed fixture metadata are retained under owner authorization for publication in PR #16. Raw source evidence remains unpublished.",
+  "previousSanitizedEvidenceSha256": "860056FCA1E7C1C0D4F6FB846664114A85598C0FF4288C9B8E6B80A44566EFE1",
+  "additionalReviewRedactions": {
+    "CygwinWindowsHome": 1,
+    "HostPrivateIPv4": 149,
+    "AdditionalPrivateIPv4": 1
+  },
+  "reviewNotes": [
+    "Review copy derived from the previously locally sanitized evidence; original evidence and runner hashes retained as provenance assertions, not independently rehashed here.",
+    "Command 121 stdout contained a missed MSYS/Cygwin /ca generic local home-directory path path; user home prefix replaced consistently with existing Windows-home pseudonym.",
+    "Two private IPv4 identities pseudonymized consistently; loopback/unspecified endpoint addresses retained for evidence context.",
+    "All result IDs/statuses and command sequence/exit/timeout outcomes match the received sanitized draft.",
+    "Real act execution, host-process outbound isolation, credential/runtime isolation and PASS reuse remain UNVERIFIED/BLOCKED.",
+    "Owner authorization: On 2026-10-12, the repository owner explicitly authorized publishing the complete corrected sanitized evidence report and manifest in PR #16 after the integrity and security checks passed. This authorization covers retained firewall identifiers and fixture metadata in the sanitized report. The raw source evidence remains unpublished.",
+    "Sanitization does not attest the original report was accurate or that the runner produced it without modification."
+  ]
+}

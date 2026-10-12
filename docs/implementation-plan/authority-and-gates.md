@@ -40,3 +40,11 @@ Authority, in order: `docs/prd.md` (scope and outcomes), `docs/architecture.md` 
 Feasibility investigations may run in a **separate, explicitly approved spike issue** before feature work, but must not be merged as unreviewed production bypass behavior. An unresolved gate blocks its dependent slice/release, not unrelated earlier slices.
 
 <!-- END ORIGINAL CONTRACT -->
+
+## D3 progress and S2 development boundary — 2026-10-12
+
+**Owner-approved sequencing adjustment:** The [restricted D3 feasibility run](../s0/d3-feasibility-record.md) passed its Git and Docker preflight checks, but D3 is **PARTIAL** and does not authorize real `act` execution.
+
+S2 Go implementation may proceed on isolated Git fixtures and fake execution adapters, provided all unverifiable or unsupported required inputs fail non-PASS. This limited start does not close D3, relax snapshot/event acceptance, or authorize merging a completed S2 slice without the required reviews.
+
+Real `act` execution remains blocked until a separately reviewed host/container network and credential boundary, verified policy evidence, and explicit owner approval. The D3 constraints continue to gate real-`act` S4 acceptance and full MVP acceptance. Dependency acquisition follows the [local-CI policy](../specs/local-ci-execution/results-and-acceptance.md#dependency-acquisition-and-reuse-2026-10-12).
