@@ -5,7 +5,7 @@
 
 This catalogue is not approval to execute. Phase B remains blocked until independent security PASS, architecture decisions resolved, and explicit owner approval names the VM, workflows, endpoints, and commands. If the pinned binary/runtime cannot honor any gate below, stop before workflow execution.
 
-**Growth decision: KEEP.** This procedure is one operational unit: environment and snapshot gates, both launch legs, independent controls, inspection, and emergency stop/rollback must be read together to run safely. Splitting those dependencies further would make the commands easier to invoke without their governing gates.
+**Growth decision: KEEP (>300 lines).** This remains one gated operational procedure: both platform launch examples depend on the shared environment/snapshot gates and the later independent controls, inspection, and rollback steps. Neither launch block is a safe independent retrieval unit; separating it would detach executable commands from the gates they require. The cohesive exception is retained under the repository context policy.
 
 ## Required gates
 
