@@ -1,7 +1,7 @@
 # S0 — Contract traceability and deterministic test planning
 
 **Status:** S0 planning artifact for [Issue #9](https://github.com/arvin-ramezani/ci-see/issues/9); NOT implementation evidence.
-**Baseline:** `main` at `8d42f06303b9bfdd013716d8d520b84eaac9539f` (after Issue #10).
+**Baseline:** main at 8d42f06303b9bfdd013716d8d520b84eaac9539f (after Issue #10).
 **Authority:** [PRD](../prd.md) → [architecture](../architecture.md) → [focused specs](../index.md) for behavior; [S0–S10 plan](../implementation-plan.md) for sequencing.
 **Owner scope decision (2026-10-10):** Support common Git operations first; explicitly block unsupported cases. This cannot override a required acceptance test.
 
@@ -12,6 +12,7 @@
 | Find requirement owner, slice, and planned evidence | [Requirement/acceptance matrix](traceability.md) |
 | Decide staged/pushed state and Git/event edge cases | [D3 compatibility and decision register](snapshots-and-decisions.md) |
 | Read verified D3 feasibility results and pending constraints | [D3 restricted feasibility record](d3-feasibility-record.md) |
+| Plan real-act security evidence and acceptance phases for Issue #17 | [D3 Phase A verification plan](d3-phase-a-verification-plan.md) |
 | Construct reproducible failure/safety checks | [Fixture catalog](fixtures.md) |
 | Set up Go tests, hosts, and package seams | [Testing and interfaces](testing-and-interfaces.md) |
 
@@ -29,7 +30,7 @@
 ## S0 completion and handoff
 
 1. Independently review mapped clauses against the linked authoritative wording and whether unsupported behavior violates any mandatory acceptance.
-2. [Restricted D3 feasibility](d3-feasibility-record.md) permits **Git-only/fake-`act` S2 implementation**; this is not full D3 or S2 acceptance. Complete the unresolved event, hook/caller, network and credential gates before real `act`, dependent S4 acceptance or release. D1, D2 and D4 remain separately gated as scheduled.
+2. [Restricted D3 feasibility](d3-feasibility-record.md) permits **Git-only/fake-act S2 implementation**; this is not full D3 or S2 acceptance. Complete the unresolved event, hook/caller, network and credential gates before real act, dependent S4 acceptance or release. D1, D2 and D4 remain separately gated as scheduled.
 3. Run docs/links/ID checks on the exact PR head; do not label proposed Go or fixture commands PASS.
 4. Keep the PR **draft** until independent review passes. Merge only after explicit owner authorization; then start [S1 Go CLI foundation](../implementation-plan/vertical-slices.md#4-dependency-ordered-vertical-slices).
 
