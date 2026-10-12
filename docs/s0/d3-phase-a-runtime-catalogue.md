@@ -14,13 +14,17 @@ This catalogue is not approval to execute. Phase B remains blocked until indepen
 3. Establish outside-guest deny-by-default enforcement and independent capture before any act network attempt. Verify the effective policy with non-act controls. Prepare independent policy inspection and connection observations for host act, children/helpers, WSL2, daemon, and each container class.
 4. Review and pin the guard workflow. Its only job step must be trusted inline probe code; no third-party action, service, checkout, or unreviewed command. The first act invocation may run only this guard workflow. It must test prohibited Docker API/socket and host-service paths and any explicitly approved positive endpoint. Independently inspect the resulting container HostConfig/mounts and correlate daemon events before permitting any other workflow. A failed or unavailable observation is NO-GO.
 5. Create a fresh detached fixture snapshot from the approved commit/tree. Independently compare its complete file manifest and Git tree to the reviewed source. Record hashes before each invocation and after it. A mismatch, dirty state, changed workflow, or inability to compute the oracle blocks execution.
-6. Run act from a new empty invocation directory with a newly created empty home, XDG config, Docker config, and run temp directory. Inventory these directories and the snapshot for `.actrc`, `.env`, `.secrets`, `.vars`, and `.input`. Require those ambient files absent. Pass explicit, hashed empty files to all four file flags. Clear the child environment and pass only an allowlist, including isolated HOME/USERPROFILE/XDG/APPDATA/LOCALAPPDATA, empty DOCKER_CONFIG/GH_CONFIG_DIR, GIT_CONFIG_NOSYSTEM=1 and a hashed empty GIT_CONFIG_GLOBAL. Inventory Git credential helpers, SSH agent/key sources, cloud credentials, and Docker credential stores without exposing values; they must be absent/inaccessible. Set GOTOOLCHAIN=local. Any inherited variable/config or credential source that cannot be excluded blocks invocation. If this isolation cannot be demonstrated, do not invoke act.
+6. Run act from a new empty invocation directory with a newly created empty home, XDG config, Docker config, and run temp directory. Inventory these directories and the snapshot for `.actrc`, `.env`, `.secrets`, `.vars`, and `.input`. Require those ambient files absent. Pass explicit, hashed empty files to all four file flags. Clear the child environment and pass only an allowlist, including isolated HOME/USERPROFILE/XDG/APPDATA/LOCALAPPDATA, empty DOCKER_CONFIG/GH_CONFIG_DIR, GIT_CONFIG_NOSYSTEM=1, a hashed empty GIT_CONFIG_GLOBAL, GIT_TERMINAL_PROMPT=0, and the same command-scope empty credential.helper override in both legs. Inventory Git credential-helper and HTTP extraheader sources by key/origin only; reject file-based matches. Exclude GIT_ASKPASS, SSH_AUTH_SOCK, SSH keys/agents, cloud credential variables, and credential stores from each allowlist; they must be absent/inaccessible. Set GOTOOLCHAIN=local. Require finite per-leg deadlines, captured stdout/stderr/exit status, bounded normal-stop then verified-tree forced-stop handling, and post-stop run-owned resource/listener checks. Any inherited variable/config or credential source that cannot be excluded blocks invocation. If this isolation or recovery cannot be demonstrated, do not invoke act.
 
-The reviewed upstream source sets `--network` to `host` by default; therefore pass the dedicated per-run network explicitly. It documents `--container-daemon-socket -` as disabling the socket bind mount. The release-tagged source and pinned binary help must confirm both before Phase B; otherwise NO-GO. The upstream configuration loader searches XDG, home, and the process invocation directory, so isolate all three. The exact act options below are required on every workflow invocation: `--directory "$Snapshot"`, `--network "$RunNetwork"` where the inspected per-run network is not `host`, and `--container-daemon-socket -`. Also pass explicit empty `--env-file`, `--secret-file`, `--var-file`, and `--input-file` paths plus the reviewed workflow/event/image. Verify these options exist in the pinned release; never improvise replacements. The flags select act behavior, while independent daemon inspection and process/container network observations prove effective behavior.
+The reviewed pinned source defaults --network to host, --pull to true, and --rebuild to true. It documents --container-daemon-socket - as disabling the socket bind mount. Every workflow invocation below must pass --directory "$Snapshot", the inspected non-host --network "$RunNetwork", --container-daemon-socket -, --pull=false, --rebuild=false, and --action-offline-mode, plus explicit empty --env-file, --secret-file, --var-file, and --input-file paths. Confirm every option against the exact pinned binary's help and immutable source before Phase B; any mismatch is NO-GO. Flags select act behavior, while independent daemon inspection and process/container network observations prove effective behavior.
+
+### Dependency acquisition boundary
+
+Acquire dependencies only in a distinct, owner-approved stage with its own allowlisted destinations, deny-by-default enforcement, positive/negative controls, and independent capture. The execution leg must consume a read-only or immutable handoff. Pin and verify the platform-specific OCI manifest digest and each action's immutable repository commit/content hash before launch; record the complete action-cache inventory. The pinned source says --pull and --rebuild default to true, so --pull=false --rebuild=false is mandatory even when a digest is supplied. --action-offline-mode is an additional cache behavior, not an isolation boundary: preflight every referenced action and image, and block before invocation if any content is missing or mismatched. Do not permit an act fallback pull, rebuild, action fetch, or alternate registry. A blocked attempt or a successful local-cache run does not prove egress isolation; retain enforcement configuration and independent observations separately.
 
 ## Windows-native guard and fixture launch
 
-The operator substitutes only values from the approved run manifest. `$InvocationDir` is empty and isolated; `$Snapshot` is the immutable reviewed checkout; `$Workflow` is a path inside it; `$RunNetwork` is a unique inspected non-host network; all `$Empty*` files are zero-byte files in the run temp directory.
+The operator substitutes values only from the approved run manifest. $InvocationDir is empty and isolated; $Snapshot is the immutable reviewed checkout; $Workflow is inside it; $RunNetwork is a unique inspected non-host network; and all $Empty* files are zero-byte files in the run temp directory. The manifest must approve finite limits; the examples use a 300-second act deadline, a 15-second normal-termination grace period, and a 15-second forced-stop settlement period. Require a pinned PowerShell version and independently verified process-tree observer before launch. If the observer cannot attribute descendants to this run, do not start act. Both platforms must use the same Git policy: disable system config, use a hash-verified empty global config, disable prompts, and reset credential.helper at command scope. Inventory repository-local helper and http.*.extraheader key origins without values; any file-based match blocks the leg.
 
 ```powershell
 $ErrorActionPreference = 'Stop'
@@ -40,17 +44,22 @@ $DockerConfig = '<empty-run-owned-docker-config>'
 $CleanHome = '<empty-run-owned-home>'
 $XdgHome = '<empty-run-owned-xdg-config>'
 $DaemonEndpoint = '<approved-disposable-VM-daemon-endpoint>'
-$ActionCache = '<empty-run-owned-action-cache>'
+$ActionCache = '<read-only-verified-run-action-cache>'
 $EmptyGitConfig = '<run-temp>/empty.gitconfig'
 $GHConfig = '<empty-run-owned-gh-config>'
+$PrivateEvidence = '<private-run-evidence-directory>'
+$TimeoutSeconds = 300
+$GraceSeconds = 15
+$ForcedSettlementSeconds = 15
 
-# Before invocation: verify exact commit/tree and full snapshot manifest; inspect
-# HOME/XDG/invocation config locations and all ambient input names. Do not print values.
-# Require all four explicit input files to be empty and hash-recorded.
+# Before invocation: verify exact commit/tree, full snapshot manifest, dependency
+# digests/cache entries, isolated config locations, and absent ambient input files.
+# Hash-record the empty files and private evidence directory; never print secrets.
 $Arguments = @(
   '--directory', $Snapshot, '-W', $Workflow, '-e', $EventFile, '--action-cache-path', $ActionCache,
   '-P', "ubuntu-22.04=$Image", '--network', $RunNetwork,
   '--container-daemon-socket', '-',
+  '--pull=false', '--rebuild=false', '--action-offline-mode',
   '--env-file', $EmptyEnv, '--secret-file', $EmptySecrets,
   '--var-file', $EmptyVars, '--input-file', $EmptyInput,
   '-s', "GITHUB_TOKEN=CISEE-DUMMY-$RunId", 'push'
@@ -69,31 +78,109 @@ $Allow = @{
   APPDATA = '<empty-run-owned-appdata>'; LOCALAPPDATA = '<empty-run-owned-localappdata>'
   DOCKER_CONFIG = $DockerConfig; DOCKER_HOST = $DaemonEndpoint; GH_CONFIG_DIR = $GHConfig
   GIT_CONFIG_NOSYSTEM = '1'; GIT_CONFIG_GLOBAL = $EmptyGitConfig; GIT_TERMINAL_PROMPT = '0'
+  GIT_CONFIG_COUNT = '1'; GIT_CONFIG_KEY_0 = 'credential.helper'; GIT_CONFIG_VALUE_0 = ''
   GOTOOLCHAIN = 'local'
 }
 foreach ($entry in $Allow.GetEnumerator()) { $psi.Environment[$entry.Key] = $entry.Value }
+
+# Run a read-only preflight with the same isolated HOME and no-system/empty-global policy as the act child; omit the command-scope helper reset here so file-based helper sources remain visible.
+# Preserve and restore this PowerShell process environment; write names/origins only.
+$GitEnvNames = @('HOME','USERPROFILE','XDG_CONFIG_HOME','APPDATA','LOCALAPPDATA',
+  'GIT_CONFIG_NOSYSTEM','GIT_CONFIG_GLOBAL','GIT_TERMINAL_PROMPT')
+$PriorGitEnv = @{}
+foreach ($name in $GitEnvNames) {
+  $PriorGitEnv[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+  [Environment]::SetEnvironmentVariable($name, $Allow[$name], 'Process')
+}
+try {
+  $PriorConfigEnv = @{}
+  foreach ($entry in Get-ChildItem Env: | Where-Object { $_.Name -match '^GIT_CONFIG_(COUNT|KEY_[0-9]+|VALUE_[0-9]+|PARAMETERS)) {
+    $PriorConfigEnv[$entry.Name] = $entry.Value
+    [Environment]::SetEnvironmentVariable($entry.Name, $null, 'Process')
+  }
+  $GitKeys = & git.exe -C $Snapshot config --show-origin --name-only --get-regexp '^(credential\.helper|http\..*extraheader$)' 2>$null
+  $GitConfigExit = $LASTEXITCODE
+  $GitKeys | Set-Content -LiteralPath "$PrivateEvidence\git-config-keys.txt"
+} finally {
+  foreach ($name in $PriorConfigEnv.Keys) {
+    [Environment]::SetEnvironmentVariable($name, $PriorConfigEnv[$name], 'Process')
+  }
+  foreach ($name in $GitEnvNames) {
+    [Environment]::SetEnvironmentVariable($name, $PriorGitEnv[$name], 'Process')
+  }
+}
+if ($GitConfigExit -eq 0) { throw 'NO-GO: credential helper or HTTP extraheader source is present' }
+if ($GitConfigExit -ne 1) { throw 'NO-GO: Git credential-source inspection failed' }
 foreach ($arg in $Arguments) { [void]$psi.ArgumentList.Add($arg) }
-# First invocation only: reviewed guard workflow, never a target/untrusted workflow.
+
+# The guard workflow is the only first invocation. Capture exact process identity,
+# start time and descendants with the independent observer before waiting.
 $proc = [Diagnostics.Process]::Start($psi)
+$StartedAt = $proc.StartTime.ToUniversalTime()
+$ProcessId = $proc.Id
 $outTask = $proc.StandardOutput.ReadToEndAsync()
 $errTask = $proc.StandardError.ReadToEndAsync()
-$proc.WaitForExit()
+$TimedOut = -not $proc.WaitForExit($TimeoutSeconds * 1000)
+$StopRequestExit = $null
+$ForcedStopUsed = $false
+if ($TimedOut) {
+  # Normal termination request to this run's verified process tree, then a bounded
+  # grace period. taskkill without /F is the normal request; record its exit status.
+  $current = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+  if ($current -and $current.StartTime.ToUniversalTime() -eq $StartedAt) {
+    & "$env:SystemRoot\System32\taskkill.exe" /PID $ProcessId /T
+    $StopRequestExit = $LASTEXITCODE
+    if (-not $proc.WaitForExit($GraceSeconds * 1000)) {
+      # Recheck PID/start-time/image against the observer's run manifest before force.
+      $current = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+      if (-not $current -or $current.StartTime.ToUniversalTime() -ne $StartedAt) {
+        throw 'UNRESOLVED: process identity changed; quarantine/restore the VM'
+      }
+      & "$env:SystemRoot\System32\taskkill.exe" /PID $ProcessId /T /F
+      $ForcedStopUsed = $true
+      if (-not $proc.WaitForExit($ForcedSettlementSeconds * 1000)) {
+        throw 'UNRESOLVED: act did not settle; quarantine/restore the VM'
+      }
+    }
+  } else {
+    throw 'UNRESOLVED: act process identity unavailable; quarantine/restore the VM'
+  }
+}
+if (-not $proc.WaitForExit($ForcedSettlementSeconds * 1000)) {
+  throw 'UNRESOLVED: process exit not observed; quarantine/restore the VM'
+}
+if (-not $outTask.Wait($ForcedSettlementSeconds * 1000) -or
+    -not $errTask.Wait($ForcedSettlementSeconds * 1000)) {
+  throw 'UNRESOLVED: output capture did not close; quarantine/restore the VM'
+}
 $stdout = $outTask.GetAwaiter().GetResult()
 $stderr = $errTask.GetAwaiter().GetResult()
 $ActExit = $proc.ExitCode
-# Store raw output privately; inspect only daemon-event IDs owned by $RunId.
+$RunStatus = if ($TimedOut) { 'TIMEOUT' } elseif ($ActExit -eq 0) { 'EXIT_0' } else { 'NONZERO' }
+[IO.File]::WriteAllText("$PrivateEvidence\act.stdout", $stdout)
+[IO.File]::WriteAllText("$PrivateEvidence\act.stderr", $stderr)
+[pscustomobject]@{
+  runId=$RunId; processId=$ProcessId; startedAt=$StartedAt
+  status=$RunStatus; actExit=$ActExit; stopRequestExit=$StopRequestExit
+  forcedStop=$ForcedStopUsed; timeoutSeconds=$TimeoutSeconds
+} | ConvertTo-Json | Set-Content -LiteralPath "$PrivateEvidence\act-result.json"
+# Continue to bounded run-owned Docker cleanup and post-stop inventory even on
+# TIMEOUT/NONZERO. Preserve evidence first; never remove resources by broad name.
 ```
 
-Before a later reviewed fixture, independently approve the guard result and inspect actual daemon HostConfig, mounts, network mode/routes, ports, privilege/capabilities, security options, image digest, and namespace data. Confirm no socket/pipe or credential mount and no host service is reachable. Preserve the configured policy and independent observations separately. Any mismatch, hidden inherited config, unknown mount, host mode, or reachable prohibited endpoint leaves isolation INCOMPLETE and prohibits the next invocation.
-
-For each later case, change only the approved workflow/event from the manifest; retain the same explicit safety options, clean environment, `--directory` snapshot, empty files, isolated Git/credential configuration, and manifest-bound run ID. Do not use `--privileged`, container options that relax the profile, host namespaces, implicit action cache substitutions, `gh auth`, or `--no-skip-checkout`. Do not treat `--dryrun`, offline mode, image pinning, or an outer egress filter as proof of isolation.
+A timeout or nonzero exit is recorded as TIMEOUT or NONZERO, never PASS. The Windows stop request and forced-stop path must be rehearsed with a harmless owned process before the approved run; if normal stop, descendant attribution, bounded wait, exit capture, or post-stop inventory is not demonstrated, classify the environment BLOCKED and do not invoke act. The run-owned cleanup and VM quarantine/restore procedure below applies after every status.
 
 ## WSL2 leg
 
-Use a dedicated approved distribution and Linux-native snapshot path, binaries, empty config/input files, and daemon endpoint. First record WSL/kernel/distribution identity and confirm WSL2 capabilities. Do not infer any result from Windows-native verification.
+Use a dedicated approved distribution and Linux-native snapshot path, binaries, empty config/input files, and daemon endpoint. First record WSL/kernel/distribution identity and confirm WSL2 capabilities. Do not infer any result from Windows-native verification. Require a locally available GNU coreutils timeout; verify its version and rehearse its process-group TERM/KILL behavior with a harmless owned process before any act invocation. Missing or unverified supervisor behavior is an environmental blocker.
 
 ```sh
-set -eu
+set -u
+PATH='<pinned-tool-path>'
+export PATH
+TIMEOUT_BIN='<hash-pinned-coreutils-timeout>'
+TIMEOUT_SHA256_FILE='<private-run-evidence>/timeout.sha256'
+test -x "$TIMEOUT_BIN" || { echo 'BLOCKED: pinned timeout missing' >&2; exit 2; }
 RUN_ID='<approved-run-id>'
 ACT='<pinned-act-linux-binary>'
 SNAPSHOT='<fresh-detached-snapshot>'
@@ -102,7 +189,7 @@ WORKFLOW='.github/workflows/security-guard.yml' # guard only on first invocation
 EVENT='<pinned-event-json>'
 IMAGE='<registry/image@sha256:platform-manifest-digest>'
 RUN_NETWORK='<run-owned-bridge-network-name>'
-ACTION_CACHE='<empty-run-owned-action-cache>'
+ACTION_CACHE='<read-only-verified-run-action-cache>'
 EMPTY_GIT_CONFIG='<run-temp>/empty.gitconfig'
 GH_CONFIG_DIR='<empty-run-owned-gh-config>'
 EMPTY_ENV='<run-temp>/empty.env'
@@ -113,21 +200,70 @@ CLEAN_HOME='<empty-run-owned-home>'
 XDG_HOME='<empty-run-owned-xdg-config>'
 DOCKER_CONFIG='<empty-run-owned-docker-config>'
 DOCKER_HOST='<approved-disposable-VM-daemon-endpoint>'
-test "$RUN_NETWORK" != host
-# Before launch, verify the full snapshot/tree manifest and absent ambient files.
-# env -i prevents inherited secrets/config; use only manifest-approved values.
+PRIVATE_EVIDENCE='<private-run-evidence-directory>'
+sha256sum --check "$TIMEOUT_SHA256_FILE" > "$PRIVATE_EVIDENCE/timeout-sha256-check.txt" 2>&1 || { echo 'BLOCKED: timeout hash mismatch' >&2; exit 2; }
+"$TIMEOUT_BIN" --version > "$PRIVATE_EVIDENCE/timeout-version.txt" 2>&1 || { echo 'BLOCKED: timeout version check failed' >&2; exit 2; }
+TIMEOUT_SECONDS=300
+GRACE_SECONDS=15
+test "$RUN_NETWORK" != host || { echo 'NO-GO: host network' >&2; exit 2; }
 cd "$INVOCATION_DIR"
-env -i PATH='<pinned-tool-path>' HOME="$CLEAN_HOME" XDG_CONFIG_HOME="$XDG_HOME" \
-  DOCKER_CONFIG="$DOCKER_CONFIG" DOCKER_HOST="$DOCKER_HOST" GOTOOLCHAIN=local \
-  "$ACT" --directory "$SNAPSHOT" -W "$WORKFLOW" -e "$EVENT" \
-  -P "ubuntu-22.04=$IMAGE" --network "$RUN_NETWORK" \
-  --container-daemon-socket - \
-  --env-file "$EMPTY_ENV" --secret-file "$EMPTY_SECRETS" \
-  --var-file "$EMPTY_VARS" --input-file "$EMPTY_INPUT" \
-  -s "GITHUB_TOKEN=CISEE-DUMMY-$RUN_ID" push
+# Files must be empty/hash-recorded. Inventory act config/default inputs and verify
+# action-cache + image digests. Capture Git key names/origins only; never values.
+set +e
+env -i PATH='<pinned-tool-path>' HOME="$CLEAN_HOME" XDG_CONFIG_HOME="$XDG_HOME" LC_ALL=C \
+  GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$EMPTY_GIT_CONFIG" GIT_TERMINAL_PROMPT=0 \
+  git -C "$SNAPSHOT" config --show-origin --name-only --get-regexp '^(credential\.helper|http\..*extraheader$)' \
+  > "$PRIVATE_EVIDENCE/git-config-keys.txt" 2> "$PRIVATE_EVIDENCE/git-config-inspection.stderr"
+GIT_CONFIG_EXIT=$?
+set -e
+if [ "$GIT_CONFIG_EXIT" -eq 0 ]; then
+  echo 'NO-GO: credential or HTTP extraheader config source is present' >&2
+  exit 2
+fi
+if [ "$GIT_CONFIG_EXIT" -ne 1 ]; then
+  echo 'NO-GO: Git credential-source inspection failed' >&2
+  exit 2
+fi
+set -e
+
+# No --foreground: GNU timeout signals the act process group, then escalates after
+# GRACE_SECONDS. Pin locale so timeout diagnostics are parseable; capture status.
+LC_ALL=C
+INTERRUPTED=0
+trap 'INTERRUPTED=1' INT TERM
+set +e
+"$TIMEOUT_BIN" --verbose --signal=TERM --kill-after="$GRACE_SECONDS"s "$TIMEOUT_SECONDS"s \
+  env -i PATH='<pinned-tool-path>' HOME="$CLEAN_HOME" XDG_CONFIG_HOME="$XDG_HOME" \
+    DOCKER_CONFIG="$DOCKER_CONFIG" DOCKER_HOST="$DOCKER_HOST" GH_CONFIG_DIR="$GH_CONFIG_DIR" \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$EMPTY_GIT_CONFIG" GIT_TERMINAL_PROMPT=0 \
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= \
+    GOTOOLCHAIN=local \
+    "$ACT" --directory "$SNAPSHOT" -W "$WORKFLOW" -e "$EVENT" \
+    -P "ubuntu-22.04=$IMAGE" --network "$RUN_NETWORK" \
+    --container-daemon-socket - --pull=false --rebuild=false --action-offline-mode \
+    --action-cache-path "$ACTION_CACHE" \
+    --env-file "$EMPTY_ENV" --secret-file "$EMPTY_SECRETS" \
+    --var-file "$EMPTY_VARS" --input-file "$EMPTY_INPUT" \
+    -s "GITHUB_TOKEN=CISEE-DUMMY-$RUN_ID" push \
+    > "$PRIVATE_EVIDENCE/act.stdout" 2> "$PRIVATE_EVIDENCE/act.stderr"
+ACT_EXIT=$?
+set -e
+case "$ACT_EXIT" in
+  0) RUN_STATUS=EXIT_0 ;;
+  124|137)
+    if grep -Fq 'sending signal TERM' "$PRIVATE_EVIDENCE/act.stderr" || grep -Fq 'sending signal KILL' "$PRIVATE_EVIDENCE/act.stderr"; then RUN_STATUS=TIMEOUT
+    else RUN_STATUS=AMBIGUOUS_EXIT; fi ;;
+  *) RUN_STATUS=NONZERO ;;
+esac
+if [ "$INTERRUPTED" -ne 0 ]; then RUN_STATUS=INTERRUPTED; fi
+printf 'run_id=%s\nstatus=%s\nexit=%s\ntimeout_seconds=%s\ngrace_seconds=%s\n' \
+  "$RUN_ID" "$RUN_STATUS" "$ACT_EXIT" "$TIMEOUT_SECONDS" "$GRACE_SECONDS" \
+  > "$PRIVATE_EVIDENCE/act-result.txt"
+# Continue to bounded run-owned Docker cleanup and post-stop inventory for every
+# status. TIMEOUT/NONZERO/AMBIGUOUS_EXIT is never PASS; missing process/resource observations block.
 ```
 
-For the later fixture invocation, select only an individually reviewed workflow/event from the manifest. Retain the same required options and environment clearing. Store output privately, capture exit status, and inspect only run-owned daemon resources. If the exact pinned version rejects an option or any environment/config source remains uncontrolled, stop and classify the leg BLOCKED.
+The timeout wrapper's finite deadline, process-group TERM, and KILL-after grace are mandatory. Its exact local version and harmless-process rehearsal are evidence prerequisites, not an act test. If the wrapper itself is unavailable, its exit is ambiguous, output/status cannot be retained, or any descendant/resource remains unaccounted for, mark the leg BLOCKED/INCOMPLETE and quarantine/restore the VM. For every later fixture, keep the same environment, finite limits, options, verified cache, and run-owned recovery path; only the reviewed workflow/event may change. Do not proceed to another fixture unless RUN_STATUS is EXIT_0 and recovery/inventory is complete; EXIT_0 is only a raw feasibility observation, not product acceptance.
 
 ## Reproducible endpoint probes
 
