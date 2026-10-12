@@ -43,7 +43,7 @@
     "SensitiveField": 2,
     "SecretArgument": 0
   },
-  "policy": "Private paths/emails/public IPv4/recognized secret values pseudonymized; loopback/private/test IPv4 retained. Draft requires review before public release.",
+  "policy": "Private paths, email addresses, public IPv4 addresses and recognized secret values are pseudonymized; loopback/private/test IPv4 and reviewed fixture metadata are retained under owner authorization for publication in PR #16. Raw source evidence remains unpublished.",
   "previousSanitizedEvidenceSha256": "860056FCA1E7C1C0D4F6FB846664114A85598C0FF4288C9B8E6B80A44566EFE1",
   "additionalReviewRedactions": {
     "CygwinWindowsHome": 1,
