@@ -29,7 +29,7 @@
 ## S0 completion and handoff
 
 1. Independently review mapped clauses against the linked authoritative wording and whether unsupported behavior violates any mandatory acceptance.
-2. Resolve the open D3 architecture/security feasibility items before depending on them in S2/S4; D1, D2 and D4 remain separately gated as scheduled.
+2. [Restricted D3 feasibility](d3-feasibility-record.md) permits **Git-only/fake-`act` S2 implementation**; this is not full D3 or S2 acceptance. Complete the unresolved event, hook/caller, network and credential gates before real `act`, dependent S4 acceptance or release. D1, D2 and D4 remain separately gated as scheduled.
 3. Run docs/links/ID checks on the exact PR head; do not label proposed Go or fixture commands PASS.
 4. Keep the PR **draft** until independent review passes. Merge only after explicit owner authorization; then start [S1 Go CLI foundation](../implementation-plan/vertical-slices.md#4-dependency-ordered-vertical-slices).
 
