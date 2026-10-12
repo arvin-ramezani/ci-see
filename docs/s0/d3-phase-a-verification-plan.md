@@ -286,13 +286,17 @@ $BypassExit = $LASTEXITCODE
 if ($BypassExit -ne 0) { throw 'FAIL: expected native no-verify commit to succeed' }
 if (Test-Path (Join-Path $Fixture 'hook-ran')) { throw 'FAIL: hook ran under no-verify' }
 & git.exe -C $Fixture cat-file -p HEAD
+# After saving transcript and hashes in the approved private evidence store:
+$ExpectedFixture = Join-Path $env:TEMP "ci-see-hook-$RunId"
+if ([IO.Path]::GetFullPath($Fixture) -ne [IO.Path]::GetFullPath($ExpectedFixture)) { throw 'BLOCKED: fixture ownership mismatch' }
+Remove-Item -LiteralPath $Fixture -Recurse -Force
 ~~~
 
 In WSL2, run the same fixture in another fresh directory:
 
 ~~~sh
 set -eu
-ROOT=$(mktemp -d)
+ROOT=$(mktemp -d "${TMPDIR:-/tmp}/ci-see-hook.XXXXXX")
 REPO="$ROOT/repo"
 HOOKS="$ROOT/hooks"
 mkdir -p "$REPO" "$HOOKS"
@@ -319,6 +323,8 @@ test ! -e "$FIXTURE_MARKER"
 test "$(git rev-list --count HEAD)" -eq 1
 git cat-file -p HEAD
 sha256sum "$HOOKS/pre-commit"
+# After saving transcript and hashes in the approved private evidence store:
+case "$ROOT" in "${TMPDIR:-/tmp}"/ci-see-hook.*) rm -rf -- "$ROOT" ;; *) exit 1 ;; esac
 ~~~
 
 Expected: normal commit fails with hook marker present and no HEAD; after marker removal, the no-verify commit succeeds, marker stays absent, and one fixture commit exists. Preserve transcript, exit statuses, hook bytes/hash, commit object and marker state. This proves Git native bypass semantics only; Phase A does not execute it and it cannot establish CI See enforcement. If the fixture cannot run safely in an empty disposable repository, retain this ID as UNVERIFIED. First run a normal commit and require nonzero exit with no commit object; then remove the marker and run git -c core.hooksPath=<fixture-hooks> commit --no-verify -m fixture, requiring exit 0, one new commit, and no hook marker. Preserve transcript, exit statuses, hook bytes/hash, git cat-file -p HEAD, and marker state. Run the fixture independently with Windows-native Git and WSL2 Git. This is Phase B feasibility only and cannot establish CI See enforcement. If it cannot run safely in a disposable repository, retain this evidence ID as UNVERIFIED.
