@@ -1,74 +1,75 @@
-# Product requirements — Documentation strategy and next specifications
+# Product requirements — Documentation authority and revision handoff
 
-**Status:** Draft (inherited)  
+**Status:** Draft revision — owner-requested CLI direction
 **Canonical authority:** [Product requirements](../prd.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 15. Documentation Strategy
 
-CI See will use a **centralized semantic documentation architecture**.
+Use [docs/index.md](../index.md) as the documentation entrypoint.
+PRD owns intent; architecture owns system boundaries; specs own behavior; plans
+own sequencing; evidence owns recorded results. Link rather than duplicate.
+Create directories only when they have content.
 
-This fits a new single-product repository and gives humans and AI agents one predictable documentation entry point without creating unnecessary hierarchy.
+### Revision scope and authority
 
-Target evolution:
+This PR updates the PRD first, as requested. It deliberately changes meaning
+from automatic Git enforcement to an explicit CLI. IDs, public paths, and legacy
+headings remain for traceability. Earlier wording is recoverable at baseline
+`d979d9b2a631c121aaee0ef60185201159ce4d11`.
 
-~~~text
-docs/
-├── prd.md
-├── index.md
-├── architecture.md
-├── specs/
-├── decisions/
-└── operations/
-~~~
+| Baseline requirement | Disposition |
+| --- | --- |
+| FR-1: init/Git integration | Retain setup; remove Git integration |
+| FR-2: discovery | Retain; add listing/selection and empty-selection handling |
+| FR-3: local CI | Retain Go/act; explicit invocation, Docker, download/reuse policy |
+| FR-4: events | Retain; explicit inputs and local-context limits |
+| FR-5: identity | Retain reporting; actual local inputs and JSON replace staged-only gating state |
+| FR-6: exact-state gates | Remove gates/PASS reuse; retain tested-input accuracy |
+| FR-7: interception | Replace with independent Git and explicit verification |
+| FR-8: approval UI | Remove; terminal/JSON and non-interactive CLI |
+| FR-9: bypass/audit | Remove; truthful reporting retained |
+| FR-10: hosted duplicates | Defer beyond MVP; no automatic GitHub changes |
+| FR-11: diagnostics | Retain; remove Git-blocking reasons, add setup/cache/scope |
+| FR-12: secrets | Retain separation/redaction; explicit credential inputs |
+| FR-13: hosts | Retain three hosts; distinguish them from Linux job execution |
+| Sections 1–5, 7–14 | Rewrite flow, principles, safety, scope, success, decisions and open questions for explicit CLI |
+| Sections 15–16 | Retain ownership; replace gating/approval delivery with revision handoff |
 
-Directories should be created only when they have real content.
+Older architecture, specs, S0 mappings, and implementation slices are **not yet
+reconciled**. Their gating/approval requirements and sequencing do not define the
+revised product. Retain compatible reliability/security constraints until scoped
+review; do not silently discard them.
 
-Canonical ownership:
-
-- docs/prd.md — product intent and requirements;
-- architecture documents — system structure and technical boundaries;
-- specs — implementable behavior and acceptance criteria;
-- decisions — consequential technical choices and rationale;
-- operations — install, release, troubleshooting, and runbooks;
-- code/tests/hooks/CI — mechanical enforcement.
+Existing code remains evidence of the previous design. This PR does not change
+runtime behavior or grant implementation acceptance, merge, or live-run authority.
+D3 remains PARTIAL; removed gate tests need not become revised product goals
+merely because historical evidence includes them.
 
 ## 16. Next Spec-Driven Artifacts
 
-After PRD acceptance:
+After independent review and owner acceptance of the revised PRD:
 
-1. **System architecture specification**
-   - process model;
-   - CLI/background-service boundaries;
-   - Git interception;
-   - state model;
-   - execution-engine integration;
-   - cross-platform strategy.
+1. Revise [architecture](../architecture.md) for CLI/Go/act/Docker; remove daemon,
+   interception, approval, and bypass components.
+2. Revise [execution spec](../specs/local-ci-execution.md) for commands, events,
+   current-file capture, outcomes/exits/JSON, dependencies, secrets, network
+   boundaries, compatibility, cancellation, and cleanup.
+3. Retire [Git gating](../specs/git-gating.md) and
+   [approval UX](../specs/developer-approval-ux.md) as active product contracts,
+   preserving history and repairing authority/navigation.
+4. Replace [implementation sequencing](../implementation-plan.md) and reconcile
+   [S0 traceability](../s0/index.md) with the smaller scope and platform acceptance.
+5. Implement reviewed CLI slices. Add an optional agent skill once commands and
+   reports are stable; a skill is not required to use the product.
 
-2. **Local CI execution specification**
-   - workflow discovery;
-   - events;
-   - act integration;
-   - runtime requirements;
-   - logs, secrets, artifacts, cache;
-   - parity boundaries.
+Do not add a new cache service, Git protection, or hosted-suppression mechanism
+during this PRD-only change.
 
-3. **Git gating specification**
-   - exact state identity;
-   - commit/push gates;
-   - stale-result rules;
-   - bypass semantics;
-   - concurrency and crash recovery.
+### External capability references
 
-4. **Developer approval UX specification**
-   - human flow;
-   - AI-agent flow;
-   - blocking behavior;
-   - desktop/headless handling;
-   - accessibility and failure states.
+Checked 2026-10-13; these inform design, not completed acceptance:
 
-5. **MVP implementation plan**
-   - vertical slices;
-   - acceptance tests;
-   - release criteria.
-<!-- END ORIGINAL CONTRACT -->
+- [act usage](https://nektosact.com/usage/index.html): workflow/job/event selection and cache options.
+- [act runners](https://nektosact.com/usage/runners.html): container images and hosted parity limits.
+- [act unsupported features](https://nektosact.com/not_supported.html): known gaps.
+- [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions): allowances and public runner policy.

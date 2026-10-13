@@ -1,62 +1,62 @@
-# Product requirements — Reliability, compatibility, and MVP scope
+# Product requirements — Reliability, compatibility, lightweight MVP
 
-**Status:** Draft (inherited)  
+**Status:** Draft revision — owner-requested CLI direction
 **Canonical authority:** [Product requirements](../prd.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 7. Reliability and Safety Requirements
 
-1. **Fail closed:** if CI See cannot prove PASS for the exact state, it is not PASS.
-2. **No false PASS after crash:** interrupted or partial execution cannot become PASS.
-3. **Concurrency safety:** simultaneous CI runs or Git operations cannot corrupt state or associate a result with the wrong code.
-4. **Repository isolation:** state from one repository/worktree cannot satisfy another incompatible state.
-5. **Workflow invalidation:** workflow/config changes invalidate dependent results.
-6. **Durable bypass audit:** every allowed bypass requires a successfully persisted local audit record before continuation; missing or failed audit persistence blocks Git.
-7. **Safe recovery:** if CI See crashes while Git is waiting, Git fails safely instead of silently continuing.
+1. **No false PASS:** unknown required behavior, unsupported selected jobs, missing
+   tools, acquisition/integrity failures, interruptions, and crashes cannot produce PASS.
+2. **Accurate scope:** show expected exclusions; failing to execute required selected
+   validation is non-PASS even when other jobs succeed.
+3. **Run isolation:** concurrent runs and separate repositories/worktrees cannot corrupt
+   reports, overwrite each other's artifacts, or misassociate results.
+4. **Stable inputs:** capture/identify tested inputs; detected changes during a run
+   cannot leave ambiguous PASS attributed to the current repository.
+5. **Scoped cleanup:** failure/cancellation preserve diagnostics and clean only
+   run-owned resources; unrelated Docker resources and host settings are untouched.
+6. **Credential control:** explicit secrets, scoped acquisition access, and redaction;
+   arbitrary workflows must not be assumed safe to execute locally.
+7. **Lightweight operation:** no daemon, approval GUI, cache service, or always-running
+   process; avoid redundant downloads of compatible verified cached content.
 
 ## 8. Compatibility Goals
 
-CI See should maximize compatibility with ordinary GitHub Actions by delegating execution to an established engine rather than inventing a new workflow language.
+Use existing GitHub Actions YAML as written for compatible workloads. No second
+CI definition or mandatory YAML rewrite. Local configuration may select events,
+jobs, inputs, secrets, and supported runner-image mappings.
 
-Initial focus:
+Initial targets: Linux runner jobs, common actions, service containers, dependencies,
+matrices, expressions, and events where the tested `act` version supports them.
+Publish a tested compatibility matrix rather than promise every feature works.
+Unsupported required behavior must be visible and non-PASS.
 
-- ubuntu-latest style jobs;
-- common marketplace actions;
-- service containers;
-- environment variables and secrets;
-- job dependencies;
-- matrices where supported;
-- common GitHub expressions and events.
-
-Full GitHub-hosted runner parity is not an MVP promise.
+See [act runners](https://nektosact.com/usage/runners.html) and
+[unsupported features](https://nektosact.com/not_supported.html).
+Full hosted-runner parity is not promised.
 
 ## 9. MVP Non-Goals
 
-The MVP will not:
-
-- implement a GitHub Actions engine from scratch;
-- guarantee exact GitHub-hosted runner-image parity;
-- replace GitHub;
-- provide hosted CI SaaS;
-- fully emulate macOS or Windows hosted runners;
-- let AI agents automatically approve failed CI;
-- require a second CI configuration;
-- become a general Docker orchestration tool.
+- Automatic CI, Git hooks, commit/push enforcement, or bypass approval/audit.
+- Daemon, desktop application, hosted CI service, or new workflow interpreter.
+- Second pipeline language or general Docker orchestration.
+- Exact hosted parity or native Windows/macOS runner emulation.
+- Custom caching engine or guaranteed offline execution of every workflow.
+- Automatic GitHub suppression, remote edits, or required-check publication.
+- Production sandboxing of arbitrary untrusted repositories/actions.
+- Agent-specific runtime; an optional small skill can invoke the ordinary CLI later.
 
 ## 10. MVP Scope
 
-The first usable release must prove the complete primary loop:
+The first usable release must prove:
 
-1. install CI See;
-2. initialize a repository;
-3. discover GitHub Actions workflows;
-4. run relevant workflows locally;
-5. persist exact-state results;
-6. automatically gate commit;
-7. automatically gate push;
-8. let the developer Cancel or Continue anyway after non-PASS state;
-9. support Git initiated by AI-agent/IDE processes;
-10. provide consistent supported behavior on Windows, Linux, and macOS;
-11. provide enough diagnostics to understand failures.
+1. Install prebuilt CI See and required `act`/Docker dependencies.
+2. Discover workflows and explain missing setup without Git integration.
+3. Explicitly invoke default or selected workflow/job/event validation.
+4. Download missing dependencies, verify identities, and reuse compatible caches.
+5. Execute supported existing workflows with progress and actionable diagnostics.
+6. Return accurate outcomes/exits and optional JSON/local reports.
+7. Demonstrate cold/warm-cache runs on supported Windows, macOS, and Linux hosts.
 
-<!-- END ORIGINAL CONTRACT -->
+Hosted suppression is outside this loop. Existing code and older D3 evidence
+do not establish implementation or production acceptance of the revised MVP.

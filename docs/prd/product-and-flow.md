@@ -1,125 +1,74 @@
-> [Back to Product requirements index](../prd.md)
+# CI See — Product intent and explicit CLI flow
 
-<!-- BEGIN ORIGINAL CONTRACT -->
-# CI See — Product Requirements Document
-
-**Status:** Draft  
-**Product:** CI See  
-**Canonical owner:** Product requirements  
-**Canonical path:** docs/prd.md  
-**Last updated:** 2026-10-09
+**Status:** Draft revision — owner-requested CLI direction
+**Canonical authority:** [Product requirements](../prd.md)
+**Last updated:** 2026-10-13
 
 ## 1. Product Summary
 
-CI See is a local-first developer tool that runs a repository's existing GitHub Actions workflows on the developer's own machine and integrates the result into the normal Git workflow.
-
-Its purpose is to make local CI automatic, fast, and difficult to forget for both human developers and AI coding agents.
-
-Core value:
-
-- faster feedback than push-and-wait CI;
-- reduced dependence on GitHub-hosted Actions minutes;
-- reuse of existing GitHub Actions workflows;
-- automatic CI enforcement before commit and push;
-- explicit developer control when CI has failed or has not fully passed.
+CI See is a lightweight Go CLI that runs existing GitHub Actions workflows locally
+through `act`. Developers or AI agents explicitly invoke it, receive clear results,
+and reuse downloaded dependencies to reduce setup time and hosted CI dependence.
 
 ## 2. Problem
 
-GitHub Actions is convenient, but frequent hosted execution creates latency and can consume limited hosted CI minutes.
+Push-and-wait validation adds latency and can exhaust included hosted Actions
+minutes, particularly for private repositories on GitHub Free. Standard
+GitHub-hosted runners are free for public repositories; faster feedback remains useful there.
 
-nektos/act already enables local execution of GitHub Actions, but normal act usage still leaves several product problems:
+`act` already executes workflows locally. CI See simplifies setup diagnostics,
+workflow/event selection, dependency reuse, and human/agent result reporting.
+It must not reproduce the workflow engine or introduce a second CI definition.
 
-1. Developers or AI agents must remember to run it.
-2. Users may need to remember event flags, payloads, secrets, and runner options.
-3. A commit or push can happen without a valid local CI result.
-4. A previous PASS may no longer match the code being committed.
-5. AI agents must not silently bypass failed CI.
-6. Users need a simple decision experience when CI has not passed.
-7. Local validation should not require a second CI definition.
-8. A successful local run should not unnecessarily trigger duplicate expensive hosted CI after push.
+Local execution does not prevent GitHub workflows from running after a push or PR.
+The MVP cannot promise elimination of hosted usage while remote triggers remain enabled.
 
 ## 3. Target Users
 
-Primary users:
-
-- solo developers using GitHub;
-- GitHub Free users who want to reduce hosted Actions usage;
-- developers using Codex, Claude, Cursor, or other AI coding agents;
-- developers who already define CI in GitHub Actions.
-
-Secondary users:
-
-- small teams wanting a consistent local CI gate;
-- open-source contributors validating workflows before PRs.
+- Solo developers and small teams with GitHub Actions workflows.
+- GitHub Free users seeking to reduce hosted CI usage.
+- Developers using Codex, Claude, Cursor, or other coding agents.
+- Contributors validating compatible workflows before PRs.
 
 ## 4. Product Principles
 
-1. **GitHub Actions remains the CI definition.** CI See must not create a parallel pipeline that can drift.
-2. **Local-first, not local-only.** Local execution improves feedback but is not assumed to perfectly reproduce GitHub-hosted infrastructure.
-3. **No-memory UX.** Humans and agents should not need to remember to run CI.
-4. **Developer owns bypass decisions.** AI agents must not silently approve continuation after CI failure.
-5. **Exact-state validation.** A PASS applies only to the exact state that was validated.
-6. **Fail safe.** Unknown, stale, interrupted, or failed state is never PASS.
-7. **Cross-platform UX.** Windows, Linux, and macOS should present a consistent product experience.
-8. **Low adoption cost.** Existing repositories should need minimal configuration and minimal workflow changes.
-9. **Lightweight installation.** CI See is delivered as a compiled Go CLI; users of prebuilt binaries should not need Go or Node.js installed.
+1. **One CI definition:** use existing GitHub Actions YAML.
+2. **Explicit invocation:** the developer owns when to run verification.
+3. **Small product:** Go CLI around `act`; no background daemon or approval GUI.
+4. **Cache reuse:** download missing dependencies and reuse verified compatible copies.
+5. **Honest results:** unknown, unsupported, interrupted, incomplete, or failed validation is not PASS.
+6. **Local context:** PASS describes the selected local run, not hosted-runner parity.
+7. **Cross-platform hosts:** consistent commands on Windows, macOS, and Linux.
+8. **Low adoption cost:** minimal configuration and no mandatory workflow rewrites.
+9. **Lightweight installation:** prebuilt binaries need no host Go/Node runtime
+   for CI See itself. Workflow steps may require their own runtimes.
 
 ## 5. Recommended User Flow
 
-Normal development:
+1. Install CI See, `act`, and Docker; initialize only if local configuration is needed.
+2. Change code and explicitly invoke `ci-see` from the repository.
+3. Select a workflow/job/event when needed; acquire missing dependencies and run locally.
+4. Inspect the result/logs and fix failures or decide the next development action.
+5. Commit, push, or create a PR using ordinary Git/GitHub commands.
 
-~~~text
-developer or AI agent changes code
-→ local CI validation
-→ git commit
-→ git push
-→ create or update PR
-~~~
-
-The user should not need to remember the local CI step manually.
+There is no automatic run, commit/push interception, or protection against forgetting
+verification. The CLI must not commit or push on the user's behalf.
 
 ### Commit gate
 
-When git commit is attempted, CI See checks whether the exact staged state has a valid local result.
-
-If PASS:
-
-~~~text
-git commit
-→ CI See verifies exact matching PASS
-→ commit continues
-~~~
-
-If FAIL, INCOMPLETE, NOT RUN, or STALE:
-
-~~~text
-git commit
-→ CI See blocks or pauses the operation
-→ developer gets a clear decision
-~~~
-
-Minimum developer choices:
-
-- **Cancel** — do not continue.
-- **Continue anyway** — explicitly bypass for the current operation and state.
+**Removed.** CI See neither installs commit hooks nor permits/blocks commits.
+This heading remains for legacy links; it is not an implementation requirement.
 
 ### AI-agent flow
 
-When an AI agent initiates a gated Git operation and CI is not valid:
+An optional small skill can tell an agent to invoke CI See as a verification step,
+inspect the exit code and JSON report, and report PASS, FAIL, or INCOMPLETE.
+The same CLI works without a skill or agent-specific service.
 
-1. the Git operation stops or waits;
-2. the agent cannot silently choose the bypass;
-3. CI See surfaces a simple approval UI to the developer;
-4. the developer chooses Cancel or Continue anyway;
-5. the Git process returns an unambiguous result;
-6. the agent continues or stops based on that result.
-
-The approval UX must not depend exclusively on terminal stdin because desktop and IDE agents may execute Git non-interactively.
+Agents must report actual selected scope and limitations. Choosing not to run
+verification cannot be represented as a successful CI See run.
 
 ### Push gate
 
-Before git push, CI See verifies that the exact commit being pushed is covered by an acceptable local CI result or an explicit developer bypass.
-
-Push protection is a second safety layer.
-
-<!-- END ORIGINAL CONTRACT -->
+**Removed.** CI See does not intercept pushes or require a result/bypass to push.
+Existing GitHub workflow triggers remain unchanged.

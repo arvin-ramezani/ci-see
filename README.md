@@ -1,6 +1,12 @@
 # CI See
 
-Local-first GitHub Actions execution with developer-controlled CI gating.
+A lightweight CLI for explicitly running existing GitHub Actions locally through `act`.
+
+The [revised PRD](docs/prd.md) targets Windows, macOS, and Linux hosts with
+Docker/Linux-container jobs, download-on-miss and verified dependency reuse.
+Automatic Git gates are removed; hosted-run suppression is deferred. This is
+product direction, not an implemented feature claim; architecture/specs await
+[reconciliation](docs/prd/documentation-and-next.md#16-next-spec-driven-artifacts).
 
 ## Documentation and AI agents
 
@@ -47,8 +53,9 @@ without writing hooks, configuration or validation state. They do not run CI.
 | `1` | Internal error |
 | `2` | Invalid command/arguments |
 | `3` | Operation not implemented |
-| `4` | Reserved for future blocking Git gates |
+| `4` | Reserved by existing S1 code for legacy Git gates |
 
-Validation of exact-state Git identities, `act` execution, hook integration,
-state persistence and developer approval are deferred to later slices. In S1,
-all core decisions block, including caller-supplied `PASS`.
+The existing S1 code reflects the earlier gating design: all its core decisions
+block, including caller-supplied `PASS`. Hook/approval features are removed from
+the revised PRD. Real `act` execution and revised CLI behavior remain unimplemented;
+this documentation change does not alter existing exit codes or runtime behavior.
