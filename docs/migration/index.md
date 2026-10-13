@@ -17,3 +17,8 @@ Canonical entrypoints and their **legacy headings** remain at:
 
 The [documentation index](../index.md) owns live task routing. All contract
 sentences were moved verbatim; see the historical baseline commit to audit text.
+
+## Later authorized scope revisions
+
+[CLI contract alignment](cli-contract-alignment.md) records the post-PR #20
+semantic revision and preservation boundaries. Original migration hashes remain historical.

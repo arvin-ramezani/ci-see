@@ -1,3 +1,10 @@
+**Document status: HISTORICAL — superseded for product scope by [merged PRD #20](../prd.md).**
+
+All later status labels, authority claims, imperative wording and acceptance clauses
+describe the earlier design/test scope only. They are not current CLI requirements
+or permission to execute old recipes. Original text is preserved below. D3 results
+remain PARTIAL/UNVERIFIED; this retirement does not establish runtime safety.
+
 # D3 — Restricted feasibility record
 
 **Date:** 2026-10-12

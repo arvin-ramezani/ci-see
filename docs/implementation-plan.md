@@ -1,12 +1,16 @@
 # CI See — Go MVP Implementation Plan
 
-**Status:** Draft (unchanged from the original contract)  
+**Status:** Draft aligned with merged PRD #20; independent review pending
 **Authority:** Implementation planning  
 **Canonical public path:** `docs/implementation-plan.md`
 
-This is the compatibility index. **Normative wording lives only in the linked topic documents.**
-The original headings remain here to preserve legacy GitHub fragment links.
+This is the compatibility index. **Current contract wording lives in linked topics.**
+Original headings remain for legacy links; removed components are labeled in their topics.
 Use only the sections relevant to the current task.
+
+Active scope is S0–S5 → S9 → S10. S6/S7 are retired, S8 deferred; old D3
+staged-gate obligations do not define the new runner. Unverified runtime safety
+is still unverified. See the [alignment record](migration/cli-contract-alignment.md).
 
 ## 1. Objective and Authority
 

@@ -5,8 +5,8 @@ A lightweight CLI for explicitly running existing GitHub Actions locally through
 The [revised PRD](docs/prd.md) targets Windows, macOS, and Linux hosts with
 Docker/Linux-container jobs, download-on-miss and verified dependency reuse.
 Automatic Git gates are removed; hosted-run suppression is deferred. This is
-product direction, not an implemented feature claim; architecture/specs await
-[reconciliation](docs/prd/documentation-and-next.md#16-next-spec-driven-artifacts).
+product direction, not an implemented feature claim. Architecture/specs now align
+with that direction; see [current implementation sequencing](docs/implementation-plan.md).
 
 ## Documentation and AI agents
 
@@ -18,9 +18,9 @@ from [ai-skills PR #6](https://github.com/arvin-ramezani/ai-skills/pull/6)
 requires meaning-preserving documentation changes; it does not change product scope.
 
 Read the [PRD](docs/prd.md), [architecture](docs/architecture.md),
-[three behavior specs](docs/index.md), or [implementation plan](docs/implementation-plan.md)
+[execution spec](docs/specs/local-ci-execution.md), or [implementation plan](docs/implementation-plan.md)
 through their task-specific indexes. [Migration evidence](docs/migration/index.md)
-records the unchanged source sections and legacy anchors.
+records historical source sections, legacy anchors and the later scope alignment.
 
 To validate docs locally (Python standard library only):
 

@@ -5,17 +5,19 @@ load only the topic sections needed for the task. The public contract paths are
 compatibility indexes, with authoritative wording in task-scoped child files.
 Follow [context policy](docs/context-policy.md) when modifying documentation.
 
-The [PRD revision handoff](docs/prd/documentation-and-next.md#revision-scope-and-authority)
-records the owner-requested explicit CLI scope. Architecture/specs/S0/slices await
-reconciliation; their removed Git gates/approval UX are not revised product requirements.
-This documentation revision does not authorize live `act` or claim runtime acceptance.
+The PRD, architecture, local execution spec and implementation plan now describe
+explicit CLI verification. Git-gating/approval contracts and previous S0/D3
+procedures are historical. Read the [alignment record](docs/migration/cli-contract-alignment.md)
+for preserved evidence, open decisions and the separate cleanup boundary.
+This documentation change does not authorize live act or claim runtime acceptance.
 
 ## Authority and workflow
 
 - [PRD](docs/prd.md) owns product scope and requirements.
 - [Architecture](docs/architecture.md) owns the Go MVP's system boundaries.
-- [Local CI execution](docs/specs/local-ci-execution.md), [Git gating](docs/specs/git-gating.md),
-  and [developer approval UX](docs/specs/developer-approval-ux.md) own their behaviors.
+- [Local CI execution](docs/specs/local-ci-execution.md) owns current runner behavior.
+  [Git gating](docs/specs/git-gating.md) and [approval UX](docs/specs/developer-approval-ux.md)
+  are historical only; do not implement their removed requirements.
 - [Implementation plan](docs/implementation-plan.md) owns implementation sequencing,
   not new authority to change behavioral contracts.
 - Honor the statuses of these sources. Preserve disputed evidence, escalate genuine

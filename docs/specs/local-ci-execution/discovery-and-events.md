@@ -1,84 +1,60 @@
-> [Back to Local CI execution specification index](../local-ci-execution.md)
+# Local CI execution — Explicit invocation, discovery and event selection
 
-<!-- BEGIN ORIGINAL CONTRACT -->
-# CI See — Local CI Execution Specification
-
-**Status:** Draft  
-**Product:** CI See  
-**Canonical path:** `docs/specs/local-ci-execution.md`  
-**Depends on:** `docs/prd.md`, `docs/architecture.md`  
-**Last updated:** 2026-10-09
+**Status:** Draft aligned with merged PRD #20; command details pending
+**Canonical authority:** [Local CI execution](../local-ci-execution.md)
 
 ## 1. Purpose
 
-Define how CI See discovers and runs GitHub Actions locally for the MVP.
-
-CI See orchestrates execution. `nektos/act` remains the workflow execution engine.
+Specify explicit local execution of existing workflows through `act` and Docker.
+CI See orchestrates; it does not interpret Actions itself or enforce Git operations.
 
 ## 2. Scope
 
-This spec owns:
+Own discovery/selection, inputs, prerequisites, tested source, engine lifecycle,
+dependencies, secrets, reports and compatibility limits.
+Exclude hooks, approval/bypass, automatic runs and hosted-run suppression.
 
-- workflow discovery;
-- supported local events;
-- generated event context;
-- `act` and container-runtime preflight;
-- execution lifecycle;
-- local secrets and variables;
-- logs and normalized results;
-- local parity boundaries.
-
-This spec does not own Git commit/push gating or developer bypass behavior.
+Current behavior: only S1 help/version and unavailable placeholders exist.
+Expected behavior: explicit `ci-see` executes selected validation; optional init
+checks setup without Git integration. Workflow/job listing and event/JSON options
+must be available when the command contract is finalized.
+No implementation or command availability is claimed by this spec.
 
 ## 3. Dependencies
 
-The user installs:
-
-- the **prebuilt Go `ci-see` executable** for their host OS/architecture (or builds it from source);
-- `act`, available on `PATH`;
-- Docker or another `act`-compatible container runtime.
-
-Users of a prebuilt CI See executable do **not** need to install Go, Node.js, or npm. The Go toolchain is needed only when building CI See from source. CI See must not invoke Node.js as part of its own orchestration; GitHub Actions workflows executed by `act` may independently require Node.js or other runtimes inside their jobs.
-
-CI See must detect missing or unusable dependencies before starting a run and return INCOMPLETE, never PASS.
-
-CI See records the detected `act` version with each run.
+Users install CI See, `act`, Docker/Linux containers and Git for repository context.
+Missing/unusable dependencies yield INCOMPLETE with installation guidance.
+Help/version remain usable without execution tools. No automatic host-tool installation.
+Prebuilt CI See needs no host Go/Node runtime; job runtimes are workflow dependencies.
+Record engine version, executable identity, runner digest/platform and configuration.
 
 ## 4. Workflow Discovery
 
-CI See discovers workflow files under:
+Discover GitHub-compatible `.yml`/`.yaml` workflow files directly in
+`.github/workflows/`. Nested/non-workflow files do not become implicit pipelines.
+Use existing YAML without mandatory edits or manual registration.
+Malformed YAML, empty selection and unsupported required jobs cannot yield PASS.
 
-```text
-.github/workflows/**/*.yml
-.github/workflows/**/*.yaml
-```
-
-Users do not register workflows manually.
-
-A workflow is locally eligible when it exposes at least one MVP-supported event.
-
-Unsupported-only workflows are reported as unsupported and are not silently treated as executed.
+Expose workflow/job listing and explicit workflow/job selection.
+Report selection, dependency jobs, matrix scope and exclusions. An ambiguous job
+selection across workflows must be rejected rather than silently broadened.
+Validate paths stay in the selected repository; reject unsafe path traversal.
+No selected work may disappear silently during discovery or execution.
 
 ## 5. MVP Event Policy
 
-Supported events:
+Support `pull_request`, `push` and `workflow_dispatch` for compatible workloads.
+Retain the earlier per-workflow default preference: pull_request, then push,
+then workflow_dispatch. Run each eligible workflow once, not once per trigger.
+An explicit event overrides that preference and selects matching workflows.
 
-1. `pull_request`
-2. `push`
-3. `workflow_dispatch` where no unresolved required input prevents execution
+Required missing context/dispatch inputs remain INCOMPLETE; do not fall back to a
+different event to hide missing input. Report unsupported-only workflows and
+event exclusions distinctly. Unsupported required selected jobs are non-PASS;
+an intentional subset PASS is labeled as such.
 
-For normal `ci-see` execution, each eligible workflow is run once.
-
-Event preference for a workflow:
-
-```text
-pull_request
-→ otherwise push
-→ otherwise workflow_dispatch
-```
-
-This preference favors the event most representative of pre-merge validation while avoiding duplicate execution of a workflow that supports multiple events.
-
-If a `workflow_dispatch` workflow requires inputs that CI See cannot derive, it is reported as not executable for that run.
-
-<!-- END ORIGINAL CONTRACT -->
+Normal invocation derives available local context and accepts missing values
+through CLI inputs; no hand-written event JSON required.
+Exact option spelling, listing syntax and input precedence remain **CLI-01**,
+to be finalized in a focused contract before CLI feature implementation.
+Advanced payload support must follow the same validation/identity rules.

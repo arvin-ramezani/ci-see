@@ -1,107 +1,84 @@
-# Local CI execution specification — Event payloads, execution, isolation, secrets, logs
+# Local CI execution — Actual source, execution, credentials and logs
 
-**Status:** Draft (inherited)  
-**Canonical authority:** [Local CI execution specification](../local-ci-execution.md)
+**Status:** Draft aligned with merged PRD #20; source/security details pending
+**Canonical authority:** [Local CI execution](../local-ci-execution.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 6. Event Payloads
 
-Users must not need to create event JSON for normal usage.
+Generate run-owned temporary payloads from verified local Git context and explicit
+inputs. Push includes known ref/commit/repository identity; PR includes known
+head/base refs and identities. Never invent remote PR numbers, tokens or GitHub-only facts.
+Unborn/detached branches or unknown base context are supported only when required
+fields can be supplied truthfully; otherwise INCOMPLETE.
 
-CI See generates the temporary event payload needed by `act` from local Git/repository context.
-
-For `pull_request`, the generated context should include at minimum:
-
-- current/head branch;
-- base/default branch when known;
-- head commit SHA when available;
-- base commit SHA when available;
-- repository identity.
-
-For `push`, it should include at minimum:
-
-- current ref;
-- current commit SHA;
-- repository identity.
-
-Generated payloads are temporary execution inputs and must not be committed.
-
-If required event context cannot be determined safely, the affected workflow is INCOMPLETE rather than guessed.
+Validate required dispatch inputs/types/defaults. Reject conflicting/ambiguous inputs
+and malformed payloads. Keep event inputs in tested-context identity, excluding secrets.
+A dirty tested source is recorded separately from its available HEAD commit.
+Generated payloads are not committed and cannot overwrite user files.
 
 ## 7. Execution Flow
 
-```text
-ci-see
-→ verify repository
-→ discover workflows
-→ verify act/runtime
-→ resolve event for each eligible workflow
-→ generate temporary event context
-→ record RUNNING
-→ invoke act
-→ capture result/logs
-→ persist normalized result
-→ remove temporary sensitive files
-→ return final status
-```
+1. Validate explicit selection, context and tools; prepare actual tested inputs.
+2. Acquire/verify approved missing artifacts using existing engine/runtime caches.
+3. Write RUNNING and create private run-owned execution inputs.
+4. Launch `act` with argv and explicit effective configuration.
+5. Collect all selected workflow/job/matrix outcomes, runtime errors and exclusions.
+6. Clean run-owned resources, finalize durable report and return human/JSON results.
 
-The compiled Go CLI invokes `act` as a child process using Go `os/exec` and argument arrays, not shell-built command strings.
+CI See never invokes Git commit/push or changes hooks/triggers.
+Never launch workflow code before its required artifacts and effective configuration
+are verified. Do not accept implicit pulls/cache substitutions that bypass that check.
+Bound execution and cleanup; unresolved process ownership or incomplete termination
+cannot become a successful completed run.
 
 ## 8. Execution Isolation
 
-Each run is bound to:
+Each run binds one repository/worktree, actual tested files, selected scope,
+event inputs, configuration, engine version and dependency identities.
+Use distinct temporary/report directories; parallel runs cannot overwrite each other.
 
-- one repository/worktree;
-- one exact local validation state;
-- the selected workflows/events;
-- the detected `act` version;
-- relevant CI See execution configuration.
+Default source is current local files, including uncommitted changes, rather than
+an index-tree or pushed-tip gate snapshot. Do not attribute a dirty run solely to HEAD.
+Prepare a stable execution input or detect changes reliably; ambiguous inputs are non-PASS.
+No automatic reuse of historical PASS; every invocation requests a new execution.
 
-Concurrent runs must not overwrite each other's temporary files or result records.
+**SRC-01 remains unresolved:** exact portable capture mechanism, ignored/untracked
+selection, required Git metadata, symlink/submodule handling and mutation detection.
+Resolve before source execution implementation; acceptance must prove the report
+describes what the jobs actually consumed, including any checkout action behavior.
+Do not blindly copy local credential files or materialize links outside the boundary.
 
-Detailed validation fingerprint rules belong in the Git gating specification.
+**SEC-01 remains unresolved:** minimal effective network, engine configuration,
+mount/socket/privilege, timeout and cancellation policy for supported trusted workloads.
+Inspect all relevant `.actrc` and default env/secret/variable inputs; no silent
+ambient override may change selection, networking, credentials or artifact identity.
+Either control them or report a conflicting configuration as INCOMPLETE.
+Docker/offline flags are not proof of complete host isolation.
+
+No general untrusted-workflow sandbox is promised. The old D3 VM/signed-approval
+procedure is historical test infrastructure, not the normal product runtime.
+It remains unverified and unapproved for live execution in this docs-only task.
 
 ## 9. Secrets and Variables
 
-CI See must not place secret values directly in generated shell command strings.
+Separate committed configuration, local non-secret settings and explicit secrets.
+Use allowlisted environment names or explicitly selected private files; never
+implicitly forward all host credentials or fetch a GitHub CLI token.
+Do not pass plaintext secrets in argv or record their values/digests in normal reports.
 
-MVP sources:
-
-- environment variables;
-- optional repository-local private secret file under CI See Git metadata;
-- optional repository-local private variable file under CI See Git metadata.
-
-Conceptually:
-
-```text
-<git-dir>/ci-see/
-  secrets.env
-  vars.env
-```
-
-These files are outside tracked repository content.
-
-CI See passes them to `act` through supported secret/variable mechanisms.
-
-Rules:
-
-- secret values must not be written to normal CI See logs;
-- CI See must not copy secrets into result metadata;
-- missing required secrets must produce a clear non-PASS result;
-- file permissions should be restricted where the host platform supports it.
+Use supported engine transport with private run-owned files outside job source;
+restrict permissions/ACLs, redact logs and remove transport files on all exit paths.
+Missing required secrets or unsafe transport produce non-PASS with safe reason codes.
+Scope download credentials separately from job secrets; no implicit shared credential store.
+Exact cross-platform input/transport contract belongs to **SEC-01**.
 
 ## 10. Logs
 
-Normal output should show:
+Show selected workflows/jobs, progress, outcomes, exclusions, acquisition/cache reuse,
+setup failures and compatibility warnings. Distinguish FAIL from INCOMPLETE.
+Detailed engine logs must be available after secret redaction; raw secret output
+must not be persisted or streamed unredacted as a diagnostic bypass.
 
-- workflow/job currently running;
-- PASS/FAIL/SKIPPED outcome;
-- engine/runtime failures;
-- unsupported workflow/event reasons;
-- final normalized result.
-
-Detailed `act` output remains available for diagnosis.
-
-CI See should preserve enough local run metadata to explain later why a result passed, failed, or was incomplete.
-
-<!-- END ORIGINAL CONTRACT -->
+JSON mode emits machine-readable results without engine log contamination.
+Define stream placement and schema under **CLI-01**; human logs and JSON agree.
+A report cannot label a partial selection as whole-repository/hosted validation.

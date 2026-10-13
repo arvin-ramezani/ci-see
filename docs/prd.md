@@ -12,7 +12,7 @@ The revised MVP uses explicit CLI invocation, `act`, Docker/Linux containers,
 and download-on-miss with verified cache reuse. Automatic Git gates and approval
 UX are removed; hosted-run suppression is deferred. See the
 [revision handoff](prd/documentation-and-next.md#revision-scope-and-authority)
-for the requirement map and older documents awaiting reconciliation.
+for the requirement map and historical-document routing.
 This PRD change does not change runtime code or complete D3 acceptance.
 
 ## 1. Product Summary

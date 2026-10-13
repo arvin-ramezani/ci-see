@@ -1,3 +1,10 @@
+**Document status: HISTORICAL — superseded for product scope by [merged PRD #20](../prd.md).**
+
+All later status labels, authority claims, imperative wording and acceptance clauses
+describe the earlier design/test scope only. They are not current CLI requirements
+or permission to execute old recipes. Original text is preserved below. D3 results
+remain PARTIAL/UNVERIFIED; this retirement does not establish runtime safety.
+
 # Issue #17 — Phase B runtime command catalogue
 
 **Status:** Proposed Phase B procedure only; no command here was run in Phase A.  

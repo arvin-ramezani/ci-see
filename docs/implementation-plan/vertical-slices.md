@@ -1,31 +1,37 @@
-# Implementation planning — S0–S10 dependency-ordered slices
+# Implementation planning — Explicit CLI slices and retired IDs
 
-**Status:** Draft (inherited)  
+**Status:** Draft revision aligned with merged PRD #20
 **Canonical authority:** [Implementation planning](../implementation-plan.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 4. Dependency-Ordered Vertical Slices
 
-| Slice | Deliverable and boundaries | Acceptance evidence |
+IDs remain stable; changed meanings are explicit below. Old slice numbers in
+historical PRs/evidence do not prove the newly defined slice is implemented.
+
+| Slice | Revised deliverable | Current status and required evidence |
 | --- | --- | --- |
-| **S0 — Contracts & test harness** | Finalize blocking D3 assumptions; create a deterministic fixture plan for synthetic Git repositories, fake `act`, temporary Git metadata/worktrees, process failure and headless conditions. Document all undecided scope explicitly. | Test matrix maps PRD FR-1–FR-13 and existing spec acceptance clauses; no unsupported decision treated as resolved. |
-| **S1 — Go CLI foundation** | Go module, pinned build toolchain for implementation, `cmd/ci-see`, typed core outcomes, `ci-see`/`init`/`status` skeleton, platform/process adapter interfaces, structured errors/exit meanings. No Node.js application runtime. | Build/tests/vet on chosen hosts; unknown commands/dependency errors never falsely PASS; packages obey dependency boundary. |
-| **S2 — Repository, discovery & isolated snapshots** | Resolve Git/worktree paths via Git, discover YAML workflows, select supported events deterministically, construct temporary `push`/`pull_request`/`workflow_dispatch` context and **exact index-tree or commit-tip execution snapshots** as appropriate. | Tests for staged vs unstaged/untracked files, detached HEAD, worktrees, missing branch/base context, ambiguous/required inputs, unsupported workflows, cleanup and path safety. |
-| **S3 — Local state & fingerprints** | Git-metadata state adapter, run IDs, RUNNING/PASS/FAIL/INCOMPLETE, stable schema/version, exact fingerprint (tree, repo/worktree, workflows, events, config, engine/image, variables and non-plaintext secret digest), atomic durable writes, serialization/lock recovery. | Fault injection for crashes, disk full, partial/corrupt files, concurrency and staleness; no cross-worktree reuse, false PASS, or plaintext secrets. |
-| **S4 — Local execution via `act`** | Dependency preflight; Go `os/exec` argument arrays; bounded context/process-tree cancellation; execute selected workflows against the isolated snapshot; normalize per-job and overall results; sanitize logs, temp secrets/vars and generated payloads. | Fake-`act` then real-`act` fixture tests: exit/nonzero/crash/cancel/timeouts, version detection, missing Docker/`act`, unsupported cases, multiple workflows, cleanup and no leaked secrets. |
-| **S5 — Git hooks and automatic gating** | Idempotent `ci-see init` (commit/push/both; default both); preserve existing hooks/`core.hooksPath` arrangements; pre-commit exact index gate; safe post-commit result binding; pre-push per-new-tip multi-ref gate; execute local CI automatically when no reusable PASS. | Real temp-repo tests for all modes, mode changes, no overwrite, changed staged tree, equivalent commit reuse, multi-ref push, deletion ref, stale PASS, CI crash, missing CLI, and stable allow/block exit behavior. |
-| **S6 — Approval-provider feasibility** | Security/UX spike per D1: platform-specific trusted approval source and reply channel, WSL2-to-Windows route, native Windows/Linux/macOS approach; state capability limits and adversarial test strategy. Separate from allowing bypass in code. | Independent security review records what the provider **can/cannot** resist. Unverified provider means no Continue anyway, with a fail-closed UX and MVP release blocker. |
-| **S7 — Developer decision and durable bypass audit** | Implement only reviewed provider(s). Show Cancel/Continue with operation, repo, state and reason. Authenticate a request-specific, expiring, single-use response; recheck state; persist, sync and verify audit **before** ALLOW_BYPASS. Headless/closed/crashed/expired = block. | Tests for caller-controlled input spoofing, replay/races, UI automation limits, cancellation, disk full/denied audit, changed fingerprint while UI open, noninteractive Git/IDE/agent, and response semantics. No reusable PASS or token. |
-| **S8 — Hosted duplicate-execution control** | Implement the reviewed D2 mechanism only. Preserve visible hosted security checks; explicit opt-in/config where required; safe fallback if GitHub API/config/permissions do not permit suppression. | Representative GitHub workflow/repository tests prove no accidental skip of required remote checks, no redundant work in eligible cases, and no silent bypass on failure. |
-| **S9 — Release, install and operability** | Publish signed or checksum-verifiable (policy to decide) per-OS/architecture native binaries; pin Go/tool dependencies; document installation, `PATH`, Git-hook lifecycle, upgrade and safe uninstall/rollback. No requirement for Go/Node/npm on hosts using prebuilt CLI. | Fresh-host smoke tests for supported OS/architectures, especially native Windows Git vs Git in WSL2; checksums, reproducible version metadata, missing/old `act`, Docker unavailable, hook restoration and uninstall. |
-| **S10 — Full MVP acceptance** | Exercise actual `change → Git commit → local act CI → exact PASS/non-PASS → human decision → push → PR` flow, supported platform matrix, documented parity/security limitations and diagnostic UX. | Entire acceptance matrix PASS on real Git plus `act`/Docker, verified provider/security tests, hosted duplicate strategy, release artifacts and documented recovery. Then independent release/security review + explicit owner go/no-go. |
+| **S0 — Contract alignment** | PRD, architecture, execution spec, active test map and retirement routing | This documentation PR; review pending, no runtime acceptance |
+| **S1 — CLI foundation and scoped cleanup** | Keep Go module/entrypoint/help/version; retire unused gate models, remove gate help text and isolate/retire D3 tooling in a separate PR | Foundation merged via PR #15; cleanup and revised command contract pending |
+| **S2 — Repository, discovery and current source** | Fresh repo/workflow/job discovery, explicit/default events and tested local input capture; resolve CLI-01/SRC-01 | Not implemented; fake execution and temporary repositories first |
+| **S3 — Dependencies and configuration** | Tool preflight, trusted commit/digest resolution, acquisition and verified reuse through existing caches; explicit config/secrets, resolve DEP-01/SEC-01 | Not implemented; cold/warm/tamper/failure fixtures; no new cache engine |
+| **S4 — Workflow execution** | Fresh act adapter, argv, bounded lifecycle, complete selection/job outcomes and run-owned cleanup | Not implemented; fake process verification then separately authorized real-tool acceptance |
+| **S5 — Reports and agent consumption** | Atomic per-run reports, human logs, redaction, stable exits/versioned JSON and no historical PASS reuse | Not implemented; useful report primitives may be built with earlier slices |
+| **S6 — Approval-provider feasibility** | RETIRED: human-only provider is removed from product | No implementation or acceptance dependency |
+| **S7 — Developer bypass and audit** | RETIRED: approval/bypass/audit-before-Git is removed | No implementation or acceptance dependency |
+| **S8 — Hosted duplicate control** | DEFERRED beyond MVP under FR-10 | No MVP release dependency; existing GitHub triggers remain |
+| **S9 — Release and host acceptance** | Native packages, checksums/version metadata, installation/uninstall and tested support matrix | Not implemented; existing Linux/Windows foundation CI is not full host acceptance |
+| **S10 — Explicit CLI MVP acceptance** | Install → explicitly run selected existing workflows → read reliable result → independently use Git | Not implemented; supported hosts, cold/warm caches, failure/recovery and honest limitations |
 
-**Sequence:** S0 → S1 → S2 → S3 → S4 → S5 → S7 → S8 → S9 → S10. S6 security feasibility begins alongside S0/S1 and must PASS its intended security boundary before S7. D2 analysis can begin in parallel but blocks S8 and MVP acceptance.
+**Active sequence:** S0 → S1 cleanup/contract → S2 → S3 → S4 → S5 → S9 → S10.
+S6/S7 are retired and S8 deferred; none blocks this sequence.
+Report/outcome primitives can accompany S2–S4 when needed to verify their behavior.
 
-<!-- END ORIGINAL CONTRACT -->
+Fresh discovery/execution/report packages reuse the small Go foundation.
+Do not refactor the legacy gate authorization framework into the new execution path.
 
 ## Slice clarification — 2026-10-12
 
-- **S2:** Implement Go repository discovery, event context and immutable Git snapshots using real disposable Git tests and fake-`act` adapters. Keep real-`act` execution disabled until its separate security gate passes; do not claim the S2 acceptance matrix is complete from mocks alone.
-- **S4:** Support download-on-miss and verified cache reuse through approved `act`/container-runtime facilities. Test cold and warm caches and dependency failures; no custom caching engine. Separate download permissions from execution networking and require reviewed security controls before any real `act` job.
-- **Release:** No partial slice or successful restricted D3 check changes `PRODUCTION_READY = NO`.
+**Historical heading retained.** The earlier staged-snapshot/S2 and S4 sequencing
+clarification is superseded by this table. Its original wording is recoverable at
+baseline `63ef75bf5a7c475675e0602a79df0294206d529a`.
+D3 evidence remains PARTIAL; no new runtime execution is authorized here.

@@ -1,70 +1,67 @@
-# System architecture — Execution/gating flows, approvals, security, platforms
+# System architecture — Execution lifecycle, trust and platforms
 
-**Status:** Draft (inherited)  
+**Status:** Draft aligned with merged PRD #20
 **Canonical authority:** [System architecture](../architecture.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 7. Runtime Flows
 
 ### Local run
 
-```text
-ci-see
-→ inspect repository/workflows
-→ determine validation identity
-→ record RUNNING
-→ execute act
-→ persist PASS / FAIL / INCOMPLETE
-→ return a clear exit result
-```
+1. Explicit invocation resolves repository, workflows, selected jobs/events and inputs.
+2. Validate prerequisites and actual tested-source preparation.
+3. Resolve trusted action/image identities; acquire missing compatible artifacts.
+4. Verify actual execution artifacts; create run-owned payloads and secret transport.
+5. Invoke `act`; record per-job scope, outcome and runtime context.
+6. Finalize report, redact logs, clean run-owned resources and return an exit/result.
+
+Acquisition and execution are distinct credential/network boundaries, but normal
+product use may need networking in both. No mandatory machine-wide air gap,
+signed D3 manifest, VM or detached approval is part of normal CLI architecture.
 
 ### Commit gate
 
-```text
-git commit
-→ hook invokes CI See
-→ calculate staged-state identity
-→ matching PASS: continue
-→ otherwise: block and explain
-```
+**Removed.** Ordinary commits neither invoke nor wait for CI See.
 
 ### Push gate
 
-```text
-git push
-→ hook invokes CI See
-→ identify pushed commit state
-→ matching acceptable result: continue
-→ otherwise: block
-```
+**Removed.** Ordinary pushes neither invoke nor wait for CI See.
 
 ## 8. Approval Boundary
 
-Approval remains a separate core boundary.
+**Retired product component.** There is no developer bypass, approval UI/token,
+pending Git operation or audit-before-allow protocol.
+Developer responsibility for invocation does not permit dishonest result reporting.
 
-The MVP does not require a long-lived daemon or desktop application, but the CLI may invoke a short-lived human approval surface when a developer decision is required. The exact mechanism belongs in the approval UX spec.
-
-CI See must not expose a trivial machine-only `--force` or equivalent bypass that an AI agent could silently use. Non-interactive Git operations must fail safely if a valid developer approval cannot be obtained.
-
-This keeps the core CLI architecture small while preserving the PRD requirement for developer-controlled bypass across terminal, IDE, and AI-agent initiated Git operations.
+Historical D3 test procedures retain their explicit live-test authorization;
+this design update does not authorize executing those procedures or workflows.
 
 ## 9. Reliability and Security
 
-- Unknown, stale, corrupt, or interrupted state is not PASS.
-- Invoke `git` and `act` via Go `os/exec` with argument arrays and bounded cancellation; avoid shell-string construction.
-- Validate external/process/file data at boundaries.
-- Do not persist secrets in result metadata.
-- Logs must explain why a gate passed, failed, or became stale.
-- Local `act` success is evidence, not proof of exact GitHub-hosted runner parity.
+- Use `os/exec` argv, explicit executable discovery, bounded process cancellation.
+  No shell-string construction or caller-supplied shell fragments.
+- Capture tested inputs accurately; detected ambiguity/change prevents PASS.
+- Do not implicitly inherit all host credentials, environment or engine configuration.
+- Verify source/commit/digest identity against actual downloaded/cached artifacts
+  before execution. Engine cache presence alone is not trust evidence.
+- Apply explicit network policy; offline flags do not enforce network isolation.
+- Reject accidental host/socket/privileged exposure through engine options.
+- Redact secrets from reports/logs; file permissions and transport require host tests.
+- Cleanup only resources whose ownership is proven for this run; preserve diagnostics.
+- Local workflows run code. Docker does not make arbitrary untrusted actions safe.
+- Unsupported required behavior and missing evidence cannot become PASS.
+
+Detailed command/config, source-capture and network policies must be resolved
+before their owning slice executes workflows. See the [execution contract](../specs/local-ci-execution.md).
 
 ## 10. Platform Strategy
 
-Primary development is Windows 11 + WSL2. Use a Linux binary inside WSL2 and a Windows binary for native Windows terminals; do not assume a binary for one host can run on the other.
+Build separate native binaries for Windows, macOS and Linux. WSL2 uses a Linux
+binary and needs distinct runtime evidence from native Windows.
+Do not infer macOS support from cross-compilation or Linux-container success.
 
-Publish Go CLI builds for each supported OS/architecture; installing a prebuilt release must not require Go, Node.js, or npm. Keep the Go version declared in `go.mod` and pin it in build/release workflows when implementation begins.
+Keep OS-specific path handling, secret permissions and process-tree termination
+behind small consumer-owned seams. Confirm supported OS versions/architectures,
+tool versions and runner images before release; no broader OS guarantee.
 
-Architecture must avoid WSL-specific assumptions. Platform-specific behavior stays behind adapters so native Windows, Linux, and macOS can be validated independently.
-
-The MVP focuses on Linux-container execution through `act`; full Windows/macOS hosted-runner emulation is not required.
-
-<!-- END ORIGINAL CONTRACT -->
+The CLI needs no host Go/Node runtime when prebuilt; workflow jobs may need their
+own tools. Keep Go build requirements in `go.mod` and development CI.

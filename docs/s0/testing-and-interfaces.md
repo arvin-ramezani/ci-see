@@ -1,40 +1,42 @@
-# S0 — Go testing, CI environments and interfaces
+# S0 — Current CLI test seams and verification boundaries
 
-**Status:** Forward-looking S1+ test plan, not an implementation or passing test report.
-**Authority:** [Architecture code boundaries](../architecture.md#11-code-boundaries), [implementation slices](../implementation-plan/vertical-slices.md#4-dependency-ordered-vertical-slices), [fixture catalog](fixtures.md).
+**Status:** Forward-looking revised plan; not passing fixture evidence
+**Authority:** [architecture](../architecture.md#11-code-boundaries),
+[current traceability](cli-traceability.md), [plan](../implementation-plan.md)
 
 ## Planned package seams (minimal contracts; no premature API freeze)
 
-| Owner | Proposed boundary to test | Constraint |
-| --- | --- | --- |
-| `internal/core` | Typed execution states (`PASS`, `FAIL`, `INCOMPLETE`, `NOT_RUN`, `STALE`) and gate outcomes; pure fingerprint and allow/block policies | Must not import process, Git or OS adapters |
-| `internal/adapters/git` | Repository/worktree identity, index tree, commit-tip/ref context, snapshot materialization, hook inspection | Git-provided paths, no mutable working-tree leakage |
-| `internal/adapters/act` | Dependency probe, event/secret transport, process run, job/overall normalization and cancellation | `os/exec` argv, never shell command concatenation |
-| `internal/adapters/state` | Read/write exact validation run, atomic durable storage, lock/lease recovery, private fingerprint inputs | No cross-worktree reusable PASS or secret plaintext |
-| `internal/adapters/approval` | Human-provider feasibility interface; authenticated single-use approval response | S6 trust evidence blocks S7 bypass; no fake provider shipping |
-| `internal/hooks` | Hook installation/chain, gate invocation, unambiguous exit outcomes | Preserve existing hooks or reject unsupported setup |
-| `internal/cli`, `cmd/ci-see` | Commands `ci-see`, `init`, `status`, diagnostics and exit semantics | Wrap use cases; no duplicated product rules |
+| Responsibility | Test boundary |
+| --- | --- |
+| CLI | Explicit arguments, selection, human/JSON rendering and exit semantics |
+| Run model | Lifecycle/outcome aggregation, tested-input scope, no vacuous PASS |
+| Workflow/source | Repository discovery, payloads/current files, identity/mutation/path safety |
+| Engine | Tool/config probes, verified artifact handoff, argv and process cancellation |
+| Reports | Atomic per-run files, redaction, concurrent repository/worktree isolation |
 
-Interface suggestions, not final Go types: `Snapshot{Repo,Worktree,Tree,Commit?,EventContext}`, `ValidationRequest{Snapshot,Fingerprint,Workflows}`, `RunResult{State,Jobs,EngineVersion}`, `GateDecision{Outcome,Reason}`. Choose actual fields and types in S1/S2 after D3 review; secrets should not be serialized into ordinary results.
+Create seams only as their consumer needs them. No GitGate, approval provider,
+hook installer or reusable-PASS store belongs in the new feature.
 
 ## Planned commands (after `go.mod` exists)
 
-```sh
-gofmt -l ./cmd ./internal           # empty output expected; format changed files
-go test ./...
-go vet ./...
-go test -coverprofile=coverage.out ./...
-go tool cover -func=coverage.out
-go test -race ./...                 # when Go race toolchain/CGO support is available
-```
+The Go module already exists. Implementation checks:
+`gofmt -l cmd internal`, focused `go test`, `go vet ./...`, and appropriate builds.
+Run the existing full deterministic suite when practical/required by CI.
+Report race/coverage outcomes only when actually executed; no invented threshold.
 
-- S1: pin the supported Go toolchain in `go.mod` and CI, choose test package naming, establish a **measured baseline**. Proposed quality goal: comprehensive tests for every fail-closed core branch; review an **~80% core-package line coverage target** only after S1 metrics. Do not impose a fabricated repository-wide threshold on this docs-only S0.
-- Unit tests: pure core and stubbed adapters. Integration: real isolated Git repos + fake `act` executable, no Docker/network. Acceptance: explicitly provision real `act`+Docker, Git and representative workflows; do not infer hosted parity.
-- CI after S1: Linux runner compiles/tests/vets and runs fake-`act` fixtures by default; Windows-native tests use a **Windows binary and native Git**, while WSL2 tests run a **Linux binary inside WSL2** as a separately recorded environment. macOS build/smoke and actual UI approval feasibility have dedicated host gates.
-- Race checks on supported hosts; platform-specific file locking, process-tree cancellation, hook interpreter/quoting, restrictive secret permissions, Git path semantics, and filesystem rename/sync require real-host acceptance in S3–S10.
-- Fixture code must not touch developer repositories or real secrets. Use per-test temp root and no shared global Git hooks/config. Test cleanup under success, panic/crash and timeout conditions.
-- S0 validation consists **only** of documentation integrity, matrix cardinalities, fixture-reference consistency and independent contract review. `go test`/coverage/race cannot pass until there is executable Go code.
+Temporary repositories and fake engines provide fast local regression evidence.
+They never use real secrets, global Git configuration, developer repositories,
+Docker-wide cleanup or public network probes.
+Process, Docker, cache, cancellation and permission acceptance on real supported
+hosts is separate, authorized work; fake fixtures cannot certify it.
 
 ## S1 entry/exit boundary
 
-Begin S1 only after reviewed S0 mapping and documented D3 open points. **Restricted S2 Go development may now begin** with disposable Git repositories, immutable snapshot/event fixtures and fake-`act` adapters, as recorded in the [D3 feasibility record](d3-feasibility-record.md) and [implementation gate](../implementation-plan/authority-and-gates.md#d3-progress-and-s2-development-boundary--2026-10-12). Real `act` execution and dependent S4 acceptance remain blocked pending separately verified host/container networking, credential boundaries and explicit owner approval; full S2 acceptance still requires all its existing contract tests. S1 exit: reproducible native Go CLI skeleton and typed state/gate outcomes, adapter seams with tests, no false PASS for missing inputs, with exact commit/SHA and actual command output. Do not implement Git gating, `act` execution, approval or remote CI in S1.
+The merged foundation provides help/version and safe unavailable placeholders.
+Keep that base, update legacy wording and retire gate-only code in a separate PR.
+Resolve CLI-01 before command implementation; SRC-01 before source execution;
+DEP-01/SEC-01 before trusted dependency/runtime integration; D4 before release.
+
+Implementation sessions perform related verification and report what remains.
+Independent reviews are separate gates, not self-review claims. Existing source
+is not rewritten or removed by this planning change.

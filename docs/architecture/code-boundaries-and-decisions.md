@@ -1,56 +1,51 @@
-# System architecture — Go package boundaries, deferred decisions, next specs
+# System architecture — Small Go packages and unresolved contracts
 
-**Status:** Draft (inherited)  
+**Status:** Draft aligned with merged PRD #20
 **Canonical authority:** [System architecture](../architecture.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 11. Code Boundaries
 
-```text
-cmd/
-  ci-see/
-    main.go
-internal/
-  cli/
-  core/
-  adapters/
-    git/
-    act/
-    state/
-    approval/
-  hooks/
-go.mod
-```
+Keep `cmd/ci-see`, `internal/cli`, Go module/build metadata and useful CLI tests.
+Build fresh run, workflow, engine and report behavior in focused internal packages.
+Suggested responsibilities, not mandatory empty scaffolding:
 
-Rules:
+| Responsibility | Owns |
+| --- | --- |
+| CLI | Parse inputs and render human/JSON output |
+| Run model | Outcomes, scope, lifecycle and input/report identities |
+| Workflow/source | Discovery, event context and tested-file preparation |
+| Engine | Version checks, artifact handoff, argv process execution/cancellation |
+| Reports | Per-run storage, redaction and atomic finalization |
 
-- `core` must not import infrastructure adapters.
-- Git/`act`/filesystem details stay in adapters.
-- CLI and hooks call core use cases instead of duplicating rules.
-- Use Go modules and idiomatic packages; `internal/core` must remain independent of process, OS, and Git adapter implementations.
-- Prefer Go standard library; introduce third-party dependencies only for justified requirements.
-- Boundary data must be validated explicitly; use typed result states and errors.
-- Run `go test ./...` and `go vet ./...`; add integration tests using isolated temporary Git repositories and stubbed `act` where appropriate.
-- Tests must enforce exact-state PASS and fail-closed behavior.
+Interfaces belong with consumers. Pure result rules must not import process,
+Git or Docker adapters. Use explicit boundary validation and typed errors.
+Create adapters only when needed; do not add a daemon, framework or cache service.
+
+The existing `internal/core` is a legacy gate skeleton, not the new run model.
+`cmd/d3-preflight` and `internal/d3preflight` are separate offline test tooling,
+not prerequisites or implementation of local workflow execution.
+Removing/relocating that code and obsolete tests belongs in a separate cleanup PR.
+This documentation PR removes no executable code.
 
 ## 12. Deferred Decisions
 
-Focused specs or ADRs will define:
+Resolve in a focused spec/ADR before dependent implementation:
 
-- event selection and generated event payloads;
-- exact validation fingerprint inputs;
-- developer approval/bypass UX;
-- secrets, artifacts, and cache behavior;
-- runner-image policy;
-- duplicate GitHub-hosted execution control;
-- native Windows/macOS runner behavior.
+- CLI syntax, numeric exits and versioned JSON schema.
+- Portable current-file capture, ignored/untracked policy, Git metadata needs,
+  symlink/submodule handling and detection of input changes.
+- Explicit engine configuration isolation and verified cache handoff capabilities.
+- Tool versions, runner mappings, timeout/cleanup mechanisms and host support matrix.
+- Secret input methods and acquisition-versus-runtime networking policy.
+
+Do not silently choose these security/compatibility decisions during unrelated work.
+Hosted suppression, native Windows/macOS jobs and other OSs remain outside MVP.
 
 ## 13. Next Specifications
 
-1. Local CI execution specification.
-2. Git gating specification.
-3. Developer approval UX specification.
-4. MVP implementation plan.
+Use the revised [local execution contract](../specs/local-ci-execution.md) and
+[implementation plan](../implementation-plan.md). The gating and approval specs
+are historical; do not create new implementations from them.
 
-Implementation should begin only when the relevant behavior is specified enough to test deterministically. The MVP uses Go end to end for the CLI and orchestration; no Node.js/TypeScript application or runtime is required.
-<!-- END ORIGINAL CONTRACT -->
+Fresh discovery/execution/report features should reuse the small CLI foundation
+rather than evolve block-only gates. No new application behavior is claimed here.

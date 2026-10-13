@@ -7,8 +7,10 @@ security contracts. **Upstream skill:** `arvin-ramezani/ai-skills` at `6ec528e49
 
 Use [documentation index](index.md) to choose relevant canonical sources.
 The PRD owns product requirements, architecture owns Go/system boundaries,
-the three focused specs own their behavioral contracts, and the implementation
-plan owns execution order. Preserve each source's actual status and unresolved
+the local execution spec owns current runner behavior, and the implementation
+plan owns execution order. Git-gating/approval specs and earlier S0/D3 procedures
+are historical; preserve their evidence without treating them as current scope.
+Preserve each source's actual status and unresolved
 owner decisions. Use links rather than duplicate contracts; synchronize affected
 documentation when authorized code changes contract behavior.
 
