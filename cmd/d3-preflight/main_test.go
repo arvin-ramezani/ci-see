@@ -99,10 +99,13 @@ func TestRunRejectsDuplicateReadinessProfileFlag(t *testing.T) {
 func writeReadinessFixture(t *testing.T, args []string) []byte {
 	t.Helper()
 	profile := d3preflight.ReadinessProfile{
-		Schema:  d3preflight.ReadinessSchema,
-		Host:    d3preflight.ReadinessHost{ID: "host-01", WindowsVersion: "Windows 11", HyperVAvailable: boolPointer(true), HyperVEvidenceRef: "host-hyperv-evidence"},
-		VM:      d3preflight.ReadinessVM{ID: "vm-01", Disposable: boolPointer(true), NestedVirtualization: boolPointer(true), WSL2Available: boolPointer(true), SnapshotID: "snapshot-01", PrerequisiteEvidenceRef: "vm-prereq-evidence"},
-		Legs:    d3preflight.ReadinessLegs{WindowsNativeEvidenceRef: "windows-native-evidence", WSL2EvidenceRef: "wsl2-evidence"},
+		Schema: d3preflight.ReadinessSchema,
+		Host:   d3preflight.ReadinessHost{ID: "host-01", WindowsVersion: "Windows 11", HyperVAvailable: boolPointer(true), HyperVEvidenceRef: "host-hyperv-evidence"},
+		VM:     d3preflight.ReadinessVM{ID: "vm-01", Disposable: boolPointer(true), NestedVirtualization: boolPointer(true), WSL2Available: boolPointer(true), SnapshotID: "snapshot-01", PrerequisiteEvidenceRef: "vm-prereq-evidence"},
+		Legs: d3preflight.ReadinessLegs{
+			WindowsNativeGuestID: "guest-01", WindowsNativeEvidenceRef: "windows-native-evidence",
+			WSL2GuestID: "wsl-guest-01", WSL2EvidenceRef: "wsl2-evidence",
+		},
 		Network: d3preflight.ReadinessNetwork{BoundaryID: "outside-boundary-01", DenyByDefault: boolPointer(true), EnforcedOutsideGuest: boolPointer(true), IndependentCapture: boolPointer(true), EnforcementEvidenceRef: "network-enforcement-evidence", CaptureEvidenceRef: "network-capture-evidence"},
 		Docker:  d3preflight.ReadinessDocker{DaemonID: "disposable-daemon-01", Disposable: boolPointer(true), ConfinedToVM: boolPointer(true), CredentialsIsolated: boolPointer(true), HostSocketExposed: boolPointer(false), HostMountsAllowed: boolPointer(false), PrivilegedContainers: boolPointer(false), RunOwnedProcessBoundary: boolPointer(true), BoundaryEvidenceRef: "docker-boundary-evidence"},
 		Dependencies: d3preflight.ReadinessDependencies{
@@ -111,11 +114,7 @@ func writeReadinessFixture(t *testing.T, args []string) []byte {
 			Images:  []d3preflight.ReadinessImagePin{{Name: "runner", Reference: "registry.example.test/runner@sha256:" + strings.Repeat("f", 64), Platform: "linux/amd64", Digest: "sha256:" + strings.Repeat("f", 64)}},
 			Actions: []d3preflight.ReadinessActionPin{{Name: "actions-checkout", Repository: "https://github.com/actions/checkout", Commit: strings.Repeat("4", 40), TreeSHA: strings.Repeat("5", 40), ContentSHA256: strings.Repeat("6", 64)}},
 		},
-		Lifecycle: d3preflight.ReadinessLifecycle{TimeoutSeconds: 300, ResourceOwnerID: "run-owner-01", CleanupPolicy: "run-owned-only", RollbackSnapshot: "snapshot-01", EvidenceCustodyID: "private-evidence-01", EvidenceRef: "lifecycle-evidence"},
-	}
-	profileBytes, err := json.Marshal(profile)
-	if err != nil {
-		t.Fatal(err)
+		Lifecycle: d3preflight.ReadinessLifecycle{CleanupPolicy: "run-owned-only", RollbackSnapshot: "snapshot-01", EvidenceRef: "lifecycle-evidence"},
 	}
 	manifestPath := valueAfter(args, "--manifest")
 	approvalPath := valueAfter(args, "--approval")
@@ -125,6 +124,21 @@ func writeReadinessFixture(t *testing.T, args []string) []byte {
 	}
 	var manifest d3preflight.Manifest
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	profile.ExecutionLeg = manifest.Environment.ExecutionLeg
+	if profile.ExecutionLeg == "wsl2" {
+		profile.Legs.WSL2GuestID = manifest.Environment.GuestID
+	} else {
+		profile.Legs.WindowsNativeGuestID = manifest.Environment.GuestID
+	}
+	profile.Lifecycle.ResourceOwnerID = manifest.Cleanup.RunLabel
+	profile.Lifecycle.EvidenceCustodyID = manifest.Cleanup.EvidenceCustodyID
+	for _, command := range manifest.Commands {
+		profile.Lifecycle.TimeoutSeconds += command.TimeoutSeconds
+	}
+	profileBytes, err := json.Marshal(profile)
+	if err != nil {
 		t.Fatal(err)
 	}
 	profileDigest := sha256.Sum256(profileBytes)

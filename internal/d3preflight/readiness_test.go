@@ -27,12 +27,157 @@ func TestValidateReadinessHashesOriginalProfileBytes(t *testing.T) {
 }
 
 func TestValidateReadinessRequiresOwnerSelectionsAndEvidence(t *testing.T) {
-	profile := validReadinessProfile()
-	profile.Network.BoundaryID = ""
-	input := validReadinessInput(t, readinessProfileBytes(t, profile))
-	if result := ValidateReadiness(input); result.Status != StatusIncomplete || result.Code != "readiness_selection_or_evidence_missing" {
-		t.Fatalf("result = %+v", result)
+	for _, edit := range []struct {
+		name string
+		edit func(*ReadinessProfile)
+	}{
+		{"network boundary", func(profile *ReadinessProfile) { profile.Network.BoundaryID = "" }},
+		{"execution leg", func(profile *ReadinessProfile) { profile.ExecutionLeg = "" }},
+		{"Windows guest ID", func(profile *ReadinessProfile) { profile.Legs.WindowsNativeGuestID = "" }},
+		{"WSL2 guest ID", func(profile *ReadinessProfile) { profile.Legs.WSL2GuestID = "" }},
+	} {
+		t.Run(edit.name, func(t *testing.T) {
+			profile := validReadinessProfile()
+			edit.edit(&profile)
+			input := validReadinessInput(t, readinessProfileBytes(t, profile))
+			if result := ValidateReadiness(input); result.Status != StatusIncomplete || result.Code != "readiness_selection_or_evidence_missing" {
+				t.Fatalf("result = %+v", result)
+			}
+		})
 	}
+}
+
+func TestValidateReadinessBindsLifecycleToSignedManifest(t *testing.T) {
+	tests := []struct {
+		name string
+		edit func(*testing.T, *ReadinessProfile, *Manifest)
+		code string
+	}{
+		{"resource owner differs from signed run label", func(_ *testing.T, profile *ReadinessProfile, _ *Manifest) {
+			profile.Lifecycle.ResourceOwnerID = "another-run"
+		}, "readiness_resource_owner_mismatch"},
+		{"signed run label differs from profile owner", func(t *testing.T, _ *ReadinessProfile, manifest *Manifest) {
+			manifest.Identity.RunID = "323e4567-e89b-42d3-a456-426614174000"
+			manifest.Cleanup.RunLabel = "ci-see-d3-" + manifest.Identity.RunID
+			manifest.Environment.ContainerNetwork = manifest.Cleanup.RunLabel
+			if !replaceOptionValue(manifest.Commands[0].Argv, "--network", manifest.Cleanup.RunLabel) {
+				t.Fatal("network option not found")
+			}
+			oldToken := "GITHUB_TOKEN=CISEE-DUMMY-" + fixtureRunID
+			for index, arg := range manifest.Commands[0].Argv {
+				if arg == oldToken {
+					manifest.Commands[0].Argv[index] = "GITHUB_TOKEN=CISEE-DUMMY-" + manifest.Identity.RunID
+					return
+				}
+			}
+			t.Fatal("dummy token not found")
+		}, "readiness_resource_owner_mismatch"},
+		{"evidence custody differs from signed cleanup", func(_ *testing.T, profile *ReadinessProfile, _ *Manifest) {
+			profile.Lifecycle.EvidenceCustodyID = "another-custody"
+		}, "readiness_evidence_custody_mismatch"},
+		{"signed evidence custody differs from profile", func(_ *testing.T, _ *ReadinessProfile, manifest *Manifest) {
+			manifest.Cleanup.EvidenceCustodyID = "other-evidence-01"
+		}, "readiness_evidence_custody_mismatch"},
+		{"profile total differs from signed command budget", func(_ *testing.T, profile *ReadinessProfile, _ *Manifest) {
+			profile.Lifecycle.TimeoutSeconds++
+		}, "readiness_lifecycle_timeout_mismatch"},
+		{"signed command budget differs from profile total", func(_ *testing.T, _ *ReadinessProfile, manifest *Manifest) {
+			manifest.Commands[0].TimeoutSeconds++
+		}, "readiness_lifecycle_timeout_mismatch"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			profile := validReadinessProfile()
+			manifest := fixtureManifest(time.Date(2026, 10, 13, 8, 0, 0, 0, time.UTC), time.Date(2026, 10, 13, 10, 0, 0, 0, time.UTC))
+			test.edit(t, &profile, &manifest)
+			profileBytes := readinessProfileBytes(t, profile)
+			digest := sha256.Sum256(profileBytes)
+			manifest.Environment.EnvironmentProfileSHA = hex.EncodeToString(digest[:])
+			input, _ := signManifest(t, manifest, time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC))
+			input.Expected.RunID = manifest.Identity.RunID
+			input.Expected.GuestID = manifest.Environment.GuestID
+			input.Expected.ExecutionLeg = manifest.Environment.ExecutionLeg
+			result := ValidateReadiness(ReadinessInput{Manifest: input, ProfileBytes: profileBytes})
+			if result.Status != StatusBlocked || result.Code != test.code {
+				t.Fatalf("result = %+v, want BLOCKED/%s", result, test.code)
+			}
+		})
+	}
+}
+
+func TestValidateReadinessAcceptsSumOfSignedSerialCommandTimeouts(t *testing.T) {
+	profile := validReadinessProfile()
+	profile.Lifecycle.TimeoutSeconds = 360
+	profile.Dependencies.Tools = append(profile.Dependencies.Tools, ReadinessToolPin{
+		Name: "fetcher", Version: "v1", SHA256: strings.Repeat("7", 64),
+	})
+	manifest := fixtureManifest(time.Date(2026, 10, 13, 8, 0, 0, 0, time.UTC), time.Date(2026, 10, 13, 10, 0, 0, 0, time.UTC))
+	manifest.Artifacts = append(manifest.Artifacts, Artifact{
+		ID: "fetch-tool", Kind: "tool", Name: "fetcher", Source: "https://example.test/fetcher", Revision: "v1", ContentSHA256: strings.Repeat("7", 64),
+	})
+	manifest.Commands = append(manifest.Commands, Command{Stage: "acquisition", ArtifactID: "fetch-tool", Argv: []string{"fetcher"}, TimeoutSeconds: 60})
+	profileBytes := readinessProfileBytes(t, profile)
+	digest := sha256.Sum256(profileBytes)
+	manifest.Environment.EnvironmentProfileSHA = hex.EncodeToString(digest[:])
+	input, _ := signManifest(t, manifest, time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC))
+	if result := ValidateReadiness(ReadinessInput{Manifest: input, ProfileBytes: profileBytes}); result.Status != StatusConfigValid {
+		t.Fatalf("summed timeout budget result = %+v", result)
+	}
+}
+
+func TestValidateReadinessBindsSelectedGuestAndLeg(t *testing.T) {
+	tests := []struct {
+		name string
+		edit func(*ReadinessProfile, *Manifest)
+		code string
+	}{
+		{"execution leg differs from signed environment", func(profile *ReadinessProfile, _ *Manifest) {
+			profile.ExecutionLeg = "wsl2"
+		}, "readiness_execution_leg_mismatch"},
+		{"selected Windows guest differs from signed environment", func(profile *ReadinessProfile, _ *Manifest) {
+			profile.Legs.WindowsNativeGuestID = "other-guest"
+		}, "readiness_guest_scope_mismatch"},
+		{"selected WSL2 guest differs from signed environment", func(profile *ReadinessProfile, manifest *Manifest) {
+			manifest.Environment.ExecutionLeg = "wsl2"
+			manifest.Environment.GuestID = profile.Legs.WSL2GuestID
+			profile.Legs.WSL2GuestID = "other-guest"
+			profile.ExecutionLeg = "wsl2"
+		}, "readiness_guest_scope_mismatch"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			profile := validReadinessProfile()
+			manifest := fixtureManifest(time.Date(2026, 10, 13, 8, 0, 0, 0, time.UTC), time.Date(2026, 10, 13, 10, 0, 0, 0, time.UTC))
+			test.edit(&profile, &manifest)
+			profileBytes := readinessProfileBytes(t, profile)
+			digest := sha256.Sum256(profileBytes)
+			manifest.Environment.EnvironmentProfileSHA = hex.EncodeToString(digest[:])
+			input, _ := signManifest(t, manifest, time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC))
+			input.Expected.GuestID = manifest.Environment.GuestID
+			input.Expected.ExecutionLeg = manifest.Environment.ExecutionLeg
+			result := ValidateReadiness(ReadinessInput{Manifest: input, ProfileBytes: profileBytes})
+			if result.Status != StatusBlocked || result.Code != test.code {
+				t.Fatalf("result = %+v, want BLOCKED/%s", result, test.code)
+			}
+		})
+	}
+
+	t.Run("valid WSL2 selected leg", func(t *testing.T) {
+		profile := validReadinessProfile()
+		profile.ExecutionLeg = "wsl2"
+		manifest := fixtureManifest(time.Date(2026, 10, 13, 8, 0, 0, 0, time.UTC), time.Date(2026, 10, 13, 10, 0, 0, 0, time.UTC))
+		manifest.Environment.ExecutionLeg = "wsl2"
+		manifest.Environment.GuestID = profile.Legs.WSL2GuestID
+		profileBytes := readinessProfileBytes(t, profile)
+		digest := sha256.Sum256(profileBytes)
+		manifest.Environment.EnvironmentProfileSHA = hex.EncodeToString(digest[:])
+		input, _ := signManifest(t, manifest, time.Date(2026, 10, 13, 9, 0, 0, 0, time.UTC))
+		input.Expected.GuestID = manifest.Environment.GuestID
+		input.Expected.ExecutionLeg = manifest.Environment.ExecutionLeg
+		if result := ValidateReadiness(ReadinessInput{Manifest: input, ProfileBytes: profileBytes}); result.Status != StatusConfigValid {
+			t.Fatalf("WSL2 result = %+v", result)
+		}
+	})
 }
 
 func TestValidateReadinessRejectsMalformedAndAmbiguousJSON(t *testing.T) {
@@ -124,10 +269,14 @@ func validReadinessInput(t *testing.T, profileBytes []byte) ReadinessInput {
 
 func validReadinessProfile() ReadinessProfile {
 	return ReadinessProfile{
-		Schema:  ReadinessSchema,
-		Host:    ReadinessHost{ID: "host-01", WindowsVersion: "Windows 11", HyperVAvailable: readinessBool(true), HyperVEvidenceRef: "host-hyperv-evidence"},
-		VM:      ReadinessVM{ID: "vm-01", Disposable: readinessBool(true), NestedVirtualization: readinessBool(true), WSL2Available: readinessBool(true), SnapshotID: "snapshot-01", PrerequisiteEvidenceRef: "vm-prereq-evidence"},
-		Legs:    ReadinessLegs{WindowsNativeEvidenceRef: "windows-native-evidence", WSL2EvidenceRef: "wsl2-evidence"},
+		Schema:       ReadinessSchema,
+		Host:         ReadinessHost{ID: "host-01", WindowsVersion: "Windows 11", HyperVAvailable: readinessBool(true), HyperVEvidenceRef: "host-hyperv-evidence"},
+		VM:           ReadinessVM{ID: "vm-01", Disposable: readinessBool(true), NestedVirtualization: readinessBool(true), WSL2Available: readinessBool(true), SnapshotID: "snapshot-01", PrerequisiteEvidenceRef: "vm-prereq-evidence"},
+		ExecutionLeg: "windows-native",
+		Legs: ReadinessLegs{
+			WindowsNativeGuestID: "guest-01", WindowsNativeEvidenceRef: "windows-native-evidence",
+			WSL2GuestID: "wsl-guest-01", WSL2EvidenceRef: "wsl2-evidence",
+		},
 		Network: ReadinessNetwork{BoundaryID: "outside-boundary-01", DenyByDefault: readinessBool(true), EnforcedOutsideGuest: readinessBool(true), IndependentCapture: readinessBool(true), EnforcementEvidenceRef: "network-enforcement-evidence", CaptureEvidenceRef: "network-capture-evidence"},
 		Docker:  ReadinessDocker{DaemonID: "disposable-daemon-01", Disposable: readinessBool(true), ConfinedToVM: readinessBool(true), CredentialsIsolated: readinessBool(true), HostSocketExposed: readinessBool(false), HostMountsAllowed: readinessBool(false), PrivilegedContainers: readinessBool(false), RunOwnedProcessBoundary: readinessBool(true), BoundaryEvidenceRef: "docker-boundary-evidence"},
 		Dependencies: ReadinessDependencies{
@@ -136,7 +285,7 @@ func validReadinessProfile() ReadinessProfile {
 			Images:  []ReadinessImagePin{{Name: "runner", Reference: "registry.example.test/runner@sha256:" + strings.Repeat("f", 64), Platform: "linux/amd64", Digest: "sha256:" + strings.Repeat("f", 64)}},
 			Actions: []ReadinessActionPin{{Name: "actions-checkout", Repository: "https://github.com/actions/checkout", Commit: strings.Repeat("4", 40), TreeSHA: strings.Repeat("5", 40), ContentSHA256: strings.Repeat("6", 64)}},
 		},
-		Lifecycle: ReadinessLifecycle{TimeoutSeconds: 300, ResourceOwnerID: "run-owner-01", CleanupPolicy: "run-owned-only", RollbackSnapshot: "snapshot-01", EvidenceCustodyID: "private-evidence-01", EvidenceRef: "lifecycle-evidence"},
+		Lifecycle: ReadinessLifecycle{TimeoutSeconds: 300, ResourceOwnerID: "ci-see-d3-123e4567-e89b-42d3-a456-426614174000", CleanupPolicy: "run-owned-only", RollbackSnapshot: "snapshot-01", EvidenceCustodyID: "evidence-01", EvidenceRef: "lifecycle-evidence"},
 	}
 }
 

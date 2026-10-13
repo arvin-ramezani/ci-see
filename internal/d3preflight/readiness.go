@@ -26,6 +26,7 @@ type ReadinessInput struct {
 
 type ReadinessProfile struct {
 	Schema       string                `json:"schema"`
+	ExecutionLeg string                `json:"execution_leg"`
 	Host         ReadinessHost         `json:"host"`
 	VM           ReadinessVM           `json:"vm"`
 	Legs         ReadinessLegs         `json:"legs"`
@@ -52,7 +53,9 @@ type ReadinessVM struct {
 }
 
 type ReadinessLegs struct {
+	WindowsNativeGuestID     string `json:"windows_native_guest_id"`
 	WindowsNativeEvidenceRef string `json:"windows_native_evidence_ref"`
+	WSL2GuestID              string `json:"wsl2_guest_id"`
 	WSL2EvidenceRef          string `json:"wsl2_evidence_ref"`
 }
 
@@ -150,9 +153,9 @@ func validateReadinessProfile(profile ReadinessProfile, manifest Manifest) (Stat
 	if profile.Schema != ReadinessSchema {
 		return StatusBlocked, "readiness_profile_schema_invalid"
 	}
-	if missing(profile.Host.ID, profile.Host.WindowsVersion, profile.Host.HyperVEvidenceRef,
+	if missing(profile.ExecutionLeg, profile.Host.ID, profile.Host.WindowsVersion, profile.Host.HyperVEvidenceRef,
 		profile.VM.ID, profile.VM.SnapshotID, profile.VM.PrerequisiteEvidenceRef,
-		profile.Legs.WindowsNativeEvidenceRef, profile.Legs.WSL2EvidenceRef,
+		profile.Legs.WindowsNativeGuestID, profile.Legs.WindowsNativeEvidenceRef, profile.Legs.WSL2GuestID, profile.Legs.WSL2EvidenceRef,
 		profile.Network.BoundaryID, profile.Network.EnforcementEvidenceRef, profile.Network.CaptureEvidenceRef,
 		profile.Docker.DaemonID, profile.Docker.BoundaryEvidenceRef,
 		profile.Dependencies.AcquisitionBoundaryID, profile.Dependencies.AcquisitionEvidenceRef,
@@ -164,6 +167,16 @@ func validateReadinessProfile(profile ReadinessProfile, manifest Manifest) (Stat
 		profile.Docker.DaemonID == "host" || profile.Lifecycle.RollbackSnapshot != profile.VM.SnapshotID {
 		return StatusBlocked, "readiness_scope_or_boundary_conflict"
 	}
+	if profile.ExecutionLeg != manifest.Environment.ExecutionLeg {
+		return StatusBlocked, "readiness_execution_leg_mismatch"
+	}
+	selectedGuestID := profile.Legs.WindowsNativeGuestID
+	if manifest.Environment.ExecutionLeg == "wsl2" {
+		selectedGuestID = profile.Legs.WSL2GuestID
+	}
+	if selectedGuestID != manifest.Environment.GuestID {
+		return StatusBlocked, "readiness_guest_scope_mismatch"
+	}
 	if profile.Legs.WindowsNativeEvidenceRef == profile.Legs.WSL2EvidenceRef {
 		return StatusBlocked, "readiness_leg_evidence_must_be_distinct"
 	}
@@ -171,7 +184,8 @@ func validateReadinessProfile(profile ReadinessProfile, manifest Manifest) (Stat
 		return StatusBlocked, "acquisition_boundary_must_be_separate"
 	}
 	if !validReadinessIDs(profile.Host.ID, profile.Host.HyperVEvidenceRef, profile.VM.ID, profile.VM.SnapshotID,
-		profile.VM.PrerequisiteEvidenceRef, profile.Legs.WindowsNativeEvidenceRef, profile.Legs.WSL2EvidenceRef,
+		profile.VM.PrerequisiteEvidenceRef, profile.Legs.WindowsNativeGuestID, profile.Legs.WindowsNativeEvidenceRef,
+		profile.Legs.WSL2GuestID, profile.Legs.WSL2EvidenceRef,
 		profile.Network.BoundaryID, profile.Network.EnforcementEvidenceRef, profile.Network.CaptureEvidenceRef,
 		profile.Docker.DaemonID, profile.Docker.BoundaryEvidenceRef, profile.Dependencies.AcquisitionBoundaryID,
 		profile.Dependencies.AcquisitionEvidenceRef, profile.Lifecycle.ResourceOwnerID, profile.Lifecycle.RollbackSnapshot,
@@ -219,6 +233,15 @@ func validateReadinessProfile(profile ReadinessProfile, manifest Manifest) (Stat
 		profile.Lifecycle.CleanupPolicy != "run-owned-only" {
 		return StatusBlocked, "readiness_lifecycle_policy_invalid"
 	}
+	if profile.Lifecycle.ResourceOwnerID != manifest.Cleanup.RunLabel {
+		return StatusBlocked, "readiness_resource_owner_mismatch"
+	}
+	if profile.Lifecycle.EvidenceCustodyID != manifest.Cleanup.EvidenceCustodyID {
+		return StatusBlocked, "readiness_evidence_custody_mismatch"
+	}
+	if profile.Lifecycle.TimeoutSeconds != manifestCommandTimeoutBudget(manifest.Commands) {
+		return StatusBlocked, "readiness_lifecycle_timeout_mismatch"
+	}
 	if len(profile.Dependencies.Tools) == 0 || len(profile.Dependencies.Images) == 0 || len(profile.Dependencies.Actions) == 0 {
 		return StatusIncomplete, "readiness_dependency_pins_missing"
 	}
@@ -244,6 +267,16 @@ func validateReadinessProfile(profile ReadinessProfile, manifest Manifest) (Stat
 		}
 	}
 	return StatusConfigValid, "readiness_profile_validated_offline"
+}
+
+// manifestCommandTimeoutBudget is the signed total lifecycle budget: command
+// timeouts are summed because the manifest's stages execute serially.
+func manifestCommandTimeoutBudget(commands []Command) int64 {
+	var total int64
+	for _, command := range commands {
+		total += command.TimeoutSeconds
+	}
+	return total
 }
 
 func validReadinessIDs(values ...string) bool {
@@ -354,10 +387,10 @@ func decodeReadinessStrict(data []byte, profile *ReadinessProfile) bool {
 }
 
 var readinessObjectFields = map[string]map[string]string{
-	"profile":      {"schema": "", "host": "host", "vm": "vm", "legs": "legs", "network": "network", "docker": "docker", "dependencies": "dependencies", "lifecycle": "lifecycle"},
+	"profile":      {"schema": "", "execution_leg": "", "host": "host", "vm": "vm", "legs": "legs", "network": "network", "docker": "docker", "dependencies": "dependencies", "lifecycle": "lifecycle"},
 	"host":         {"id": "", "windows_version": "", "hyper_v_available": "", "hyper_v_evidence_ref": ""},
 	"vm":           {"id": "", "disposable": "", "nested_virtualization": "", "wsl2_available": "", "snapshot_id": "", "prerequisite_evidence_ref": ""},
-	"legs":         {"windows_native_evidence_ref": "", "wsl2_evidence_ref": ""},
+	"legs":         {"windows_native_guest_id": "", "windows_native_evidence_ref": "", "wsl2_guest_id": "", "wsl2_evidence_ref": ""},
 	"network":      {"boundary_id": "", "deny_by_default": "", "enforced_outside_guest": "", "independent_capture": "", "enforcement_evidence_ref": "", "capture_evidence_ref": ""},
 	"docker":       {"daemon_id": "", "disposable": "", "confined_to_vm": "", "credentials_isolated": "", "host_socket_exposed": "", "host_mounts_allowed": "", "privileged_containers": "", "run_owned_process_boundary": "", "boundary_evidence_ref": ""},
 	"dependencies": {"acquisition_boundary_id": "", "acquisition_evidence_ref": "", "tools": "tool_pin[]", "images": "image_pin[]", "actions": "action_pin[]"},
