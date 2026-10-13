@@ -12,6 +12,10 @@
 | Find requirement owner, slice, and planned evidence | [Requirement/acceptance matrix](traceability.md) |
 | Decide staged/pushed state and Git/event edge cases | [D3 compatibility and decision register](snapshots-and-decisions.md) |
 | Read verified D3 feasibility results and pending constraints | [D3 restricted feasibility record](d3-feasibility-record.md) |
+| Plan real-act security evidence and acceptance phases for Issue #17 | [D3 Phase A verification plan](d3-phase-a-verification-plan.md) |
+| Prepare Phase B VM, act, network, and rollback controls | [Phase B runtime command catalogue](d3-phase-a-runtime-catalogue.md) |
+| Validate the offline Phase B signed-manifest preflight boundary | [Offline preflight verifier](d3-phase-b-preflight.md) |
+| Compare Git trees/events and verify native --no-verify behavior | [Phase B Git identity and hook fixtures](d3-phase-a-git-fixtures.md) |
 | Construct reproducible failure/safety checks | [Fixture catalog](fixtures.md) |
 | Set up Go tests, hosts, and package seams | [Testing and interfaces](testing-and-interfaces.md) |
 
@@ -36,3 +40,4 @@
 ## S0 evidence boundary
 
 This adds indexing, proposed fixture cases, and decision tracking; it does not update any canonical product/spec clause. Architectural recommendations are **proposals** until the specified independent review/ADR accepts them.
+
