@@ -1,12 +1,16 @@
 # CI See — Local CI Execution Specification
 
-**Status:** Draft (unchanged from the original contract)  
+**Status:** Draft aligned with merged PRD #20; independent review pending
 **Authority:** Local CI execution specification  
 **Canonical public path:** `docs/specs/local-ci-execution.md`
 
-This is the compatibility index. **Normative wording lives only in the linked topic documents.**
-The original headings remain here to preserve legacy GitHub fragment links.
+This is the compatibility index. **Current contract wording lives in linked topics.**
+Original headings remain for legacy links; removed components are labeled in their topics.
 Use only the sections relevant to the current task.
+
+This draft defines explicit local execution and honest reporting. CLI-01, SRC-01,
+DEP-01 and SEC-01 remain [open implementation contracts](../implementation-plan/authority-and-gates.md#current-cli-decisions),
+not assumed decisions or completed runtime verification.
 
 ## 1. Purpose
 

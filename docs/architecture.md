@@ -1,12 +1,16 @@
 # CI See — System Architecture
 
-**Status:** Draft (unchanged from the original contract)  
+**Status:** Draft aligned with merged PRD #20; independent review pending
 **Authority:** System architecture  
 **Canonical public path:** `docs/architecture.md`
 
-This is the compatibility index. **Normative wording lives only in the linked topic documents.**
-The original headings remain here to preserve legacy GitHub fragment links.
+This is the compatibility index. **Current contract wording lives in linked topics.**
+Original headings remain for legacy links; removed components are labeled in their topics.
 Use only the sections relevant to the current task.
+
+Explicit CLI → act → Docker is the current scope. Hooks/approval components are
+retired; the Go foundation stays and new runner behavior is built fresh.
+See the [alignment record](migration/cli-contract-alignment.md).
 
 ## 1. Purpose
 

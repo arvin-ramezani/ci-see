@@ -1,58 +1,65 @@
-> [Back to Implementation planning index](../implementation-plan.md)
+# Implementation planning — Revised authority and decisions
 
-<!-- BEGIN ORIGINAL CONTRACT -->
-# CI See — Go MVP Implementation Plan
-
-**Status:** Draft — requires independent plan review and owner approval  
-**Product:** CI See  
-**Canonical path:** `docs/implementation-plan.md`  
-**Planning issue:** #7  
-**Last updated:** 2026-10-09
+**Status:** Draft aligned with merged PRD #20; review pending
+**Canonical authority:** [Implementation planning](../implementation-plan.md)
 
 ## 1. Objective and Authority
 
-Deliver the first usable, local-first Go CLI that runs existing GitHub Actions via user-installed `act`, automatically gates normal Git commits/pushes on exact-state CI results, and allows only a demonstrably human-approved, durably audited bypass.
-
-Authority, in order: `docs/prd.md` (scope and outcomes), `docs/architecture.md` (Go/system boundaries), `docs/specs/local-ci-execution.md`, `docs/specs/git-gating.md`, and `docs/specs/developer-approval-ux.md` (testable behavior). This plan schedules work; it does **not** override or silently relax a canonical contract. Resolve contradictions through reviewed spec/ADR changes before code.
-
-**Non-goals:** rebuilding GitHub Actions, embedding `act`, promising hosted-runner parity, a daemon/SaaS, or claiming native Git hooks are tamper-proof. Git `--no-verify` and full host compromise remain outside the enforcement boundary.
+Deliver explicitly invoked Go local CI through act/Docker with accurate reports.
+Authority: [PRD](../prd.md) → [architecture](../architecture.md) →
+[execution contract](../specs/local-ci-execution.md) → this sequencing plan.
+Retired gating/approval docs and historical S0/D3 procedures are not product authority.
 
 ## 2. Execution Rules
 
-- One narrowly scoped implementation issue and PR per slice. Branch from verified current `main`; avoid concurrent overlapping changes.
-- Before each slice, identify the authoritative acceptance clauses and missing decisions. Request owner/ADR decision rather than inventing security or product behavior.
-- First obtain independent review **PASS** on this documentation-only plan's exact PR SHA. No application code in planning PR.
-- Each implementation PR: tests + deterministic verification, independent code review, security review for trust boundaries, and owner approval before merge. A reviewer cannot self-certify an unverified gate.
-- Gates are evidence-driven: report exact head SHA, checks and limitations. Passing unit tests alone never means release-ready.
-- Prefer Go standard library, idiomatic `cmd/ci-see` and `internal/{cli,core,adapters/{git,act,state,approval},hooks}`. Keep `core` independent of platform/process adapters; never use shell-string execution.
-- Run `gofmt`, `go test ./...`, `go vet ./...`, focused integration tests, and race checks where supported. Establish coverage reporting/threshold in the test plan before enforcing a numeric target; never claim nonexistent coverage.
-- At each slice boundary, earlier gates continue to fail closed. No partial implementation may allow an unknown state or missing dependency to become PASS.
+- Separate scoped implementation issue/feature branch and draft PR per slice;
+  verify current main and preserve unrelated work.
+- Reuse Go entrypoint/help/version; build fresh execution features.
+- Resolve the relevant decision before implementing its dependent behavior.
+- Run related deterministic verification; report missing evidence explicitly.
+- Independent reviews and explicit owner merge authorization remain separate gates.
+- No shell strings, global host changes, real credentials or live act in this docs task.
+- No false PASS, implied platform acceptance or automatic production-readiness claim.
 
 ## 3. Decisions and Feasibility Gates
 
-| Gate | Decision / required evidence | Deadline |
+| Gate | Revised disposition | Effect |
 | --- | --- | --- |
-| D1 — Human approval trust | Threat-model Windows 11 + WSL2 and supported native providers; authenticate approval response, bind to one request/state, prevent caller-controlled flags/env/stdin/files/stdout/exit-code spoofing, test UI automation/IPC attacks. If human-only boundary is unproven, disable Continue anyway and **do not claim complete MVP**. | Prototype/ADR early; before S7 |
-| D2 — Remote duplicate CI | PRD FR-10 requires a safe, explicit mechanism for avoiding unnecessary duplicate GitHub-hosted work without invisibly weakening remote validation. Select/review mechanism, permissions, failure fallback and acceptance tests in a separate spec/ADR; do not silently drop this requirement. | Before S8 |
-| D3 — Snapshot/event compatibility | Decide isolated execution materialization for index tree vs commit tip, worktrees/submodules, generated PR/push event context, and honest unsupported cases. No unstaged/untracked leakage or guessed required event inputs. | Before S2/S4 |
-| D4 — Platform/release matrix | Confirm initial supported `GOOS/GOARCH`, executable naming, minimum Git/`act`/Docker conditions, process-tree cancellation strategy, and clean-host acceptance targets. Windows native and WSL2 are separate hosts. | Before S9; relevant platform adapters earlier |
+| D1 — Human approval trust | RETIRED with FR-8/FR-9 | Not an MVP dependency |
+| D2 — Remote duplicate CI | DEFERRED with FR-10 | Not an MVP release dependency |
+| D3 — Snapshot/event compatibility | HISTORICAL staged/push acceptance; PARTIAL evidence preserved | No staged-gate/PASS-reuse requirement; applicable current source/runtime safety is covered by SRC-01/SEC-01 |
+| D4 — Platform/release matrix | OPEN | Confirm real supported hosts/architectures, versions, permissions, cancellation and installation before release |
 
-Feasibility investigations may run in a **separate, explicitly approved spike issue** before feature work, but must not be merged as unreviewed production bypass behavior. An unresolved gate blocks its dependent slice/release, not unrelated earlier slices.
+### Current CLI decisions
 
-<!-- END ORIGINAL CONTRACT -->
+| ID | Required contract | Blocking scope |
+| --- | --- | --- |
+| CLI-01 | Owner-approved default event/workflow/job selection, CLI flags/subcommands, input precedence, numeric exits, JSON/report schema and stdout/stderr | Dependent S2 selection behavior and new CLI/report interface; historical event preference is PROPOSED only |
+| SRC-01 | Tested current-file capture, ignored/untracked policy, links/submodules, Git metadata and change detection | Source execution |
+| DEP-01 | Trusted sources/ref resolution and enforcing verified act/Docker artifacts without engine substitution | Dependency execution handoff |
+| SEC-01 | Effective config/env/credentials, acquisition/runtime networks, mounts/privilege, bounded processes and run-owned cleanup | Real workflow integration |
+| PERF-01 | Representative-workflow measurement protocol, baseline evidence, post-baseline owner-approved numeric budgets and comparison rules for every PRD §11 metric | S9/S10 acceptance and release; no invented numbers or live measurements in this docs PR |
+
+These are unresolved implementation contracts, not permissions to invent behavior.
+An open decision blocks dependent work, not the existing foundation or documentation.
+
+Normal product architecture may download missing dependencies and allow explicit
+workflow networking under a reviewed policy. It does not require D3's signed VM
+authorization machinery. This does not authorize running historical D3 recipes
+or real act tests: those still need separately reviewed scope and explicit approval.
 
 ## D3 progress and S2 development boundary — 2026-10-12
 
-**Owner-approved sequencing adjustment:** The [restricted D3 feasibility run](../s0/d3-feasibility-record.md) passed its Git and Docker preflight checks, but D3 is **PARTIAL** and does not authorize real `act` execution.
-
-S2 Go implementation may proceed on isolated Git fixtures and fake execution adapters, provided all unverifiable or unsupported required inputs fail non-PASS. This limited start does not close D3, relax snapshot/event acceptance, or authorize merging a completed S2 slice without the required reviews.
-
-Real `act` execution remains blocked until a separately reviewed host/container network and credential boundary, verified policy evidence, and explicit owner approval. The D3 constraints continue to gate real-`act` S4 acceptance and full MVP acceptance. Dependency acquisition follows the [local-CI policy](../specs/local-ci-execution/results-and-acceptance.md#dependency-acquisition-and-reuse-2026-10-12).
+**Historical disposition:** the earlier restricted S2 permission and staged/push
+acceptance obligations are superseded for product sequencing by the revised slices.
+D3 evidence remains PARTIAL; UNVERIFIED results do not become PASS.
+Original wording is preserved in Git at baseline
+`63ef75bf5a7c475675e0602a79df0294206d529a`.
 
 ## Owner-authorized PR #18 D3 preparation exception — 2026-10-13
 
-The owner explicitly authorizes a one-time exception on PR #18 (`codex/issue-17-phase-a`, reviewed baseline `898041edd3b84ce50779db36eb8f0be52d37e093`) to implement offline D3 Phase B preparation tooling and its deterministic tests in this planning PR. This exception is limited to the verifier and tests needed to validate signed run-manifest schema, exact-byte Ed25519 signatures, independently configured key pins, repository/run scope, expiration, and fail-closed results. It does not change CI See product behavior or provide an execution path.
-
-Before adding code, this documentation-only exception must receive an independent PASS on its exact commit. The verifier must remain offline and have no process-launch or runtime adapters: it cannot redeem approvals, invoke `act`, execute workflows, access Docker/VM/network controls, or read real credentials. A valid signature is only offline manifest validation. Replay redemption is reserved for a future separately reviewed trusted runtime component with atomic durable single-use claims; that component is outside this exception.
-
-This narrowly overrides only the separate-PR and no-application-code-in-planning-PR rules above for the named preparation tool on PR #18. All other implementation, security, verification, independent review, and owner-approval gates remain in force. Any product behavior, runtime adapter, approval redemption, environment provisioning, real `act` execution, or scope expansion requires a separate authorized slice. Preserve the 26 existing `UNVERIFIED` evidence IDs and their acceptance conditions, and keep **D3 = PARTIAL**, **real `act` = BLOCKED**, and **PRODUCTION_READY = NO**. This exception does not authorize merge or deployment.
+**Historical disposition:** PR #18 authorized only offline D3 preparation.
+It did not enable runtime execution. The existing validator code remains untouched;
+it is separate test tooling, not normal CLI runtime authorization.
+PR #19 stays unmerged pending a separate owner decision. This alignment neither
+merges/closes it nor extends its approval scope.

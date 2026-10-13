@@ -1,43 +1,42 @@
-# S0 — Contract traceability and deterministic test planning
+# S0 — Current CLI traceability and historical feasibility routing
 
-**Status:** S0 planning artifact for [Issue #9](https://github.com/arvin-ramezani/ci-see/issues/9); NOT implementation evidence.
-**Baseline:** `main` at `8d42f06303b9bfdd013716d8d520b84eaac9539f` (after Issue #10).
-**Authority:** [PRD](../prd.md) → [architecture](../architecture.md) → [focused specs](../index.md) for behavior; [S0–S10 plan](../implementation-plan.md) for sequencing.
-**Owner scope decision (2026-10-10):** Support common Git operations first; explicitly block unsupported cases. This cannot override a required acceptance test.
+**Status:** Revised planning index; not implementation evidence
+**Authority:** [PRD](../prd.md), [architecture](../architecture.md),
+[execution spec](../specs/local-ci-execution.md), [plan](../implementation-plan.md)
 
 ## Read by task
 
 | Task | Read |
 | --- | --- |
-| Find requirement owner, slice, and planned evidence | [Requirement/acceptance matrix](traceability.md) |
-| Decide staged/pushed state and Git/event edge cases | [D3 compatibility and decision register](snapshots-and-decisions.md) |
-| Read verified D3 feasibility results and pending constraints | [D3 restricted feasibility record](d3-feasibility-record.md) |
-| Plan real-act security evidence and acceptance phases for Issue #17 | [D3 Phase A verification plan](d3-phase-a-verification-plan.md) |
-| Prepare Phase B VM, act, network, and rollback controls | [Phase B runtime command catalogue](d3-phase-a-runtime-catalogue.md) |
-| Validate the offline Phase B signed-manifest preflight boundary | [Offline preflight verifier](d3-phase-b-preflight.md) |
-| Compare Git trees/events and verify native --no-verify behavior | [Phase B Git identity and hook fixtures](d3-phase-a-git-fixtures.md) |
-| Construct reproducible failure/safety checks | [Fixture catalog](fixtures.md) |
-| Set up Go tests, hosts, and package seams | [Testing and interfaces](testing-and-interfaces.md) |
+| Implement revised CLI requirements and acceptance | [Current traceability](cli-traceability.md) |
+| Plan focused tests and package boundaries | [Testing and interfaces](testing-and-interfaces.md) |
+| Review requirement retirement/preservation | [Alignment record](../migration/cli-contract-alignment.md) |
+| Inspect previous requirement mapping | [Historical matrix](traceability.md) |
+| Inspect previous staged/push design | [Historical decisions](snapshots-and-decisions.md) |
+| Inspect old fixture descriptions | [Historical fixture catalog](fixtures.md) |
+| Inspect recorded restricted results | [D3 feasibility record](d3-feasibility-record.md) |
+| Inspect historical D3 procedures/tooling | [Phase A plan](d3-phase-a-verification-plan.md), [runtime catalogue](d3-phase-a-runtime-catalogue.md), [Git fixtures](d3-phase-a-git-fixtures.md), [offline preflight](d3-phase-b-preflight.md) |
 
 ## Contract preservation and interpretation
 
-- No requirement is redefined here. Matrix references point to canonical obligations; fixture IDs describe **planned** tests, not tests that exist.
-- Map covers **FR-1–FR-13**, local CI acceptance **1–12**, Git gating **1–20**, and approval UX **1–23**.
-- Required non-PASS behavior is tested, not counted as supported success. Unsupported workflows, missing required inputs, dependencies, or unverifiable state **never** become PASS.
-- Product reliability/safety §7, compatibility §8, MVP scope §10, fingerprint/state, cancellation, and security invariants apply across rows; not just the row where referenced.
-- A staged-tree PASS must represent **exact staged files**, never an arbitrary working tree. A pushed commit is validated from **its new tip**; commit/PASS binding requires proven equivalence.
-- Only a reviewed human provider and **durably verified audit before allow** can authorize a bypass; local Git hooks cannot be called tamper-proof.
-- D1 human-provider trust, D2 hosted duplicate-CI control (FR-10), D3 snapshot/event feasibility and D4 release targets remain explicit gates. All remain subject to reviewed decision evidence.
-- No Go module, functional harness, or executable application tests exist as evidence of this S0 planning work. **PRODUCTION_READY = NO.**
+Current implementation follows revised requirements, not historical gate/provider
+clauses. G-01–G-20 and A-01–A-23 remain identifiable historical obligations;
+they are not revised MVP acceptance requirements.
+FR-8/FR-9 and gates are removed; FR-10 is deferred.
+
+Keep historical result labels, evidence JSON and hashes unchanged. D3 remains
+PARTIAL and unverified records remain unverified. Nothing here proves runtime
+networking, credentials, event fidelity or the new CLI works.
 
 ## S0 completion and handoff
 
-1. Independently review mapped clauses against the linked authoritative wording and whether unsupported behavior violates any mandatory acceptance.
-2. [Restricted D3 feasibility](d3-feasibility-record.md) permits **Git-only/fake-`act` S2 implementation**; this is not full D3 or S2 acceptance. Complete the unresolved event, hook/caller, network and credential gates before real `act`, dependent S4 acceptance or release. D1, D2 and D4 remain separately gated as scheduled.
-3. Run docs/links/ID checks on the exact PR head; do not label proposed Go or fixture commands PASS.
-4. Keep the PR **draft** until independent review passes. Merge only after explicit owner authorization; then start [S1 Go CLI foundation](../implementation-plan/vertical-slices.md#4-dependency-ordered-vertical-slices).
+Validate links/anchors, requirement IDs, current mappings, retirement status and
+preservation evidence. Independent review and owner-approved merge remain pending.
+Next implement the scoped foundation cleanup and resolve the relevant new contract
+decisions before fresh runner work. Fake tools may be used without live act.
 
 ## S0 evidence boundary
 
-This adds indexing, proposed fixture cases, and decision tracking; it does not update any canonical product/spec clause. Architectural recommendations are **proposals** until the specified independent review/ADR accepts them.
-
+This is a planning map, not code or passing fixture evidence. Existing PR #15 is
+CLI-foundation evidence only; PR #18 is offline D3 tooling; PR #19 is still unmerged.
+This PR does not close issues/PRs or authorize live tests.

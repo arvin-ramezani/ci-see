@@ -35,35 +35,29 @@ headings remain for traceability. Earlier wording is recoverable at baseline
 | Sections 1–5, 7–14 | Rewrite flow, principles, safety, scope, success, decisions and open questions for explicit CLI |
 | Sections 15–16 | Retain ownership; replace gating/approval delivery with revision handoff |
 
-Older architecture, specs, S0 mappings, and implementation slices are **not yet
-reconciled**. Their gating/approval requirements and sequencing do not define the
-revised product. Retain compatible reliability/security constraints until scoped
-review; do not silently discard them.
+The architecture, local execution contract, implementation slices and current S0
+mapping are now aligned in the [contract alignment record](../migration/cli-contract-alignment.md).
+Git-gating/approval specifications and old S0/D3 procedures are historical. Open
+CLI/source/dependency/security decisions are explicit; alignment does not mean
+all implementation contracts are finalized or runtime features exist.
 
-Existing code remains evidence of the previous design. This PR does not change
-runtime behavior or grant implementation acceptance, merge, or live-run authority.
-D3 remains PARTIAL; removed gate tests need not become revised product goals
-merely because historical evidence includes them.
+Existing source remains unchanged. D3 stays PARTIAL; retired gate tests are not
+new product goals, and unverified runtime evidence does not become PASS.
 
 ## 16. Next Spec-Driven Artifacts
 
-After independent review and owner acceptance of the revised PRD:
+1. Review and accept the aligned [architecture](../architecture.md),
+   [execution spec](../specs/local-ci-execution.md) and [plan](../implementation-plan.md).
+2. Resolve the relevant [open implementation contracts](../implementation-plan/authority-and-gates.md#current-cli-decisions)
+   before their owning feature slice; do not invent security/source policy.
+3. Open a separate scoped cleanup/command-contract PR: keep the Go foundation,
+   retire gate-only models and decide disposition of separate D3 tooling.
+4. Build fresh discovery, dependency, execution and report features under the
+   revised plan; perform separate authorized real-tool/host acceptance before release.
+5. Add an optional agent skill once commands/reports are stable.
 
-1. Revise [architecture](../architecture.md) for CLI/Go/act/Docker; remove daemon,
-   interception, approval, and bypass components.
-2. Revise [execution spec](../specs/local-ci-execution.md) for commands, events,
-   current-file capture, outcomes/exits/JSON, dependencies, secrets, network
-   boundaries, compatibility, cancellation, and cleanup.
-3. Retire [Git gating](../specs/git-gating.md) and
-   [approval UX](../specs/developer-approval-ux.md) as active product contracts,
-   preserving history and repairing authority/navigation.
-4. Replace [implementation sequencing](../implementation-plan.md) and reconcile
-   [S0 traceability](../s0/index.md) with the smaller scope and platform acceptance.
-5. Implement reviewed CLI slices. Add an optional agent skill once commands and
-   reports are stable; a skill is not required to use the product.
-
-Do not add a new cache service, Git protection, or hosted-suppression mechanism
-during this PRD-only change.
+This document and alignment PR do not authorize code deletion, closing PR #19,
+VM/firewall changes, live act or production acceptance.
 
 ### External capability references
 
