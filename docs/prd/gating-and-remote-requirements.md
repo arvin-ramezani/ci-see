@@ -1,62 +1,53 @@
-# Product requirements — FR-6–FR-10: Git gates, approvals, hosted CI
+# Product requirements — Revised Git boundaries and deferred hosted control
 
-**Status:** Draft (inherited)  
+**Status:** Draft revision — owner-requested CLI direction
 **Canonical authority:** [Product requirements](../prd.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
+IDs and headings remain for traceability. Removed requirements must not be
+implemented merely because an older specification still references them.
+
 ### FR-6 — Exact-state gating
 
-A PASS must never be reused for different code.
+**Automatic gating removed; report accuracy retained.** Reports describe only
+the inputs and selected scope actually tested under FR-5. Historical PASS cannot
+claim validation of later code/configuration/dependency changes.
 
-Changes to relevant code, workflow files, CI See configuration, event inputs, or other validation inputs must invalidate the result.
+There is no staged-tree gate, commit-to-push PASS reuse, or authorization of Git
+operations from reports. Each CLI invocation requests a new run;
+dependency-cache reuse does not mean reusing a previous PASS.
 
 ### FR-7 — Native Git workflow
 
-Normal git commit and git push commands must be gateable automatically.
+**Revised:** Git commands work independently of CI See. Developers and agents
+explicitly invoke the CLI when they want verification.
 
-Users should not be forced to replace Git commands with special CI See wrappers.
+No hooks, automatic runs, commit/push wrappers, interception, or Git-blocking
+service are part of the product. Running CI See must not change Git behavior.
 
 ### FR-8 — Developer decision UI
 
-For non-PASS state, CI See must present a clear product-owned decision surface.
-
-Example:
-
-~~~text
-Local CI did not pass.
-
-Operation: git commit
-Status: FAILED
-
-[Cancel] [Continue anyway]
-~~~
-
-It must work when Git is initiated by:
-
-- a human terminal;
-- an IDE;
-- a desktop AI agent;
-- an IDE AI agent.
+**Removed.** No desktop approval UI, waiting Git process, or Cancel/Continue-anyway
+surface. Terminal output and optional JSON provide results.
+Automation must run non-interactively using explicit inputs; missing required
+inputs terminate clearly rather than waiting for a GUI.
 
 ### FR-9 — Developer-only bypass
 
-A bypass must be an explicit developer decision.
+**Removed.** There is no CI See gate to bypass and no bypass token, human approval
+channel, or durable bypass audit. Developers decide whether/when to commit or push.
 
-CI See must not expose a trivial machine-only approval path that lets an AI agent silently self-approve.
-
-A bypass should be bound as narrowly as practical to the exact operation and repository state.
-
-A successful bypass must have its audit record durably saved **before** Git is allowed to continue. If the record cannot be saved or verified, CI See must block the operation; the approval alone is not sufficient.
+The CLI and agent integration must still report actual results: FAIL, INCOMPLETE,
+and NOT_RUN cannot be represented as PASS.
 
 ### FR-10 — Remote duplicate-execution control
 
-CI See must provide a safe way to avoid unnecessary duplicate GitHub-hosted CI after the exact code already passed locally.
+**Deferred beyond MVP.** A later feature may help avoid duplicate hosted execution
+after local validation, subject to feasibility and a separately accepted design.
 
-Constraints:
+For MVP, do not disable workflows, edit triggers, alter repository settings, add
+skip markers, or publish GitHub statuses automatically. A local run neither
+suppresses hosted Actions nor satisfies GitHub required checks by itself.
 
-- little or no manual workflow editing;
-- forgetting CI See configuration should not unexpectedly consume hosted CI where preventable;
-- remote validation must not be weakened invisibly;
-- the exact mechanism is an architecture decision, not fixed by this PRD.
-
-<!-- END ORIGINAL CONTRACT -->
+Future suppression needs explicit user control, visible effects, restoration,
+and treatment of branch protection and collaborator runs. Its mechanism and
+safety acceptance are not decided here.

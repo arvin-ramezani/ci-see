@@ -1,63 +1,64 @@
-# Product requirements — Success criteria, decisions, technical validation, open questions
+# Product requirements — Success, decisions, validation, open questions
 
-**Status:** Draft (inherited)  
+**Status:** Draft revision — owner-requested CLI direction
 **Canonical authority:** [Product requirements](../prd.md)
 
-<!-- BEGIN ORIGINAL CONTRACT -->
 ## 11. Success Criteria
 
-A developer can use an ordinary GitHub Actions repository and experience:
+A developer runs compatible existing workflows with one explicit command,
+understands the result, and continues normal Git independently.
 
-~~~text
-change code
-→ attempt commit
-→ CI See verifies local CI state
-→ PASS: commit proceeds
-→ non-PASS: developer decides
-→ push receives a second exact-state check
-→ normal PR workflow continues
-~~~
+Acceptance must demonstrate:
 
-The MVP is successful when:
+- no required YAML rewrites, hooks, approval UI, or background service;
+- cold-cache acquisition and warm-cache reuse without redundant compatible downloads;
+- missing tools, corrupt dependencies, unsupported selected jobs, job failures,
+  and interruptions yield clear non-PASS results;
+- selection, inputs, logs, exits, and JSON work non-interactively for humans/agents;
+- reports identify actual tested local inputs, dirty changes, and selected scope;
+- consistent core CLI behavior across the published Windows/macOS/Linux matrix.
 
-- users do not need to remember a separate CI command;
-- AI agents cannot silently bypass a failed gate;
-- GitHub Actions remains the CI source;
-- PASS cannot be reused for changed code;
-- the same core UX works across supported host operating systems.
+Measure setup steps, orchestration overhead, cold/warm duration, disk use, and
+downloaded bytes on a documented representative workflow. Set numeric budgets
+in the revised plan after a baseline. Do not invent hosted-minute savings while
+remote triggers remain enabled.
 
 ## 12. Confirmed Product Decisions
 
-- Product name: **CI See**.
-- MVP implementation language: **Go**, compiled CLI with prebuilt cross-platform binaries; no Node.js/TypeScript app or Node.js runtime dependency. The Go toolchain is required only when building from source.
-- GitHub Actions workflows remain the primary CI definitions.
-- Local execution is a core capability.
-- Default development flow validates locally before commit/push.
-- Commit and push must be automatically interceptable.
-- Failed or incomplete CI requires developer control over bypass.
-- AI agents must not silently make that bypass decision.
-- Cross-platform host support is required.
-- Normal Git/GitHub developer workflow should remain familiar.
+Owner-requested revision, 2026-10-13:
+
+- **CI See** remains a Go CLI with prebuilt binaries; no host Go/Node dependency
+  for CI See itself. Building from source requires Go.
+- GitHub Actions YAML remains the CI definition.
+- **Explicit CLI invocation** replaces automatic execution and all Git gates.
+- Developers own when to run it; agents may invoke the same CLI as verification.
+- `act` is the MVP engine; Docker/Linux containers are the execution substrate.
+- Download missing dependencies, verify them, and reuse existing caching facilities;
+  normal operation is not permanently offline.
+- Windows, macOS, and Linux hosts are required within a tested support matrix.
+- Hosted suppression and broader OS/native runner support are deferred.
 
 ## 13. Current MVP Direction Requiring Technical Validation
 
-- Go modules and prebuilt Go executables for the CLI, with the exact build/release toolchain pinned during implementation;
-- nektos/act as the local workflow execution engine;
-- Docker-compatible runtime as the execution substrate;
-- Git hooks or equivalent interception for commit/push;
-- CI See-owned native/desktop approval surface for agent-initiated Git operations.
+- Validate `act` against representative workflows and supported host platforms.
+- Select engine versions and runner images balancing size and compatibility.
+- Verify acquisition/cache integrity, package-manager boundaries, explicit secrets,
+  cancellation, concurrency, and reliable result capture.
+- Publish tested host/architecture and workflow-feature matrices.
+
+This revision is not runtime acceptance. Existing D3 remains PARTIAL; live-`act`
+testing retains its separate security authorization. No firewall change, host
+provisioning, or workflow execution is authorized by this documentation change.
 
 ## 14. Open Questions for Later Specs
 
-1. What exact mechanism prevents unnecessary duplicate GitHub-hosted execution?
-2. Which event should CI See choose when workflows expose multiple triggers?
-3. What exact inputs form the validation fingerprint?
-4. Should default execution run all eligible workflows or a policy-defined set?
-5. How should the approval UI be implemented cross-platform?
-6. What happens in headless sessions?
-7. Which act runner-image strategy gives the best reliability/performance balance?
-8. How should artifacts and caches behave locally?
-9. How should local secrets be stored cross-platform?
-10. How should bypass paths such as git --no-verify be handled?
-
-<!-- END ORIGINAL CONTRACT -->
+1. Default event and workflow/job selection policy.
+2. Derived event fields versus required explicit inputs.
+3. Supported engine versions, host architectures, and runner images.
+4. Capturing/fingerprinting actual tested files and reporting input changes.
+5. Stable exit codes and versioned JSON/report schema.
+6. Existing `act` configuration, cache locations, and mutable-reference handling.
+7. Cross-platform secret input methods.
+8. Network/trust policies for acquisition versus execution.
+9. Cancellation, cleanup, and concurrency bounds.
+10. Feasibility of future opt-in hosted suppression.

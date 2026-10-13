@@ -2,8 +2,13 @@
 
 Use the [documentation index](docs/index.md) to locate the relevant contract;
 load only the topic sections needed for the task. The public contract paths are
-compatibility indexes, with the original text preserved in task-scoped child files.
+compatibility indexes, with authoritative wording in task-scoped child files.
 Follow [context policy](docs/context-policy.md) when modifying documentation.
+
+The [PRD revision handoff](docs/prd/documentation-and-next.md#revision-scope-and-authority)
+records the owner-requested explicit CLI scope. Architecture/specs/S0/slices await
+reconciliation; their removed Git gates/approval UX are not revised product requirements.
+This documentation revision does not authorize live `act` or claim runtime acceptance.
 
 ## Authority and workflow
 

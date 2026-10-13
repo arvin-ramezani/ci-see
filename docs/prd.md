@@ -1,12 +1,19 @@
 # CI See — Product Requirements Document
 
-**Status:** Draft (unchanged from the original contract)  
-**Authority:** Product requirements  
+**Status:** Draft revision — owner-requested explicit CLI direction (2026-10-13)
+**Authority:** Product requirements
 **Canonical public path:** `docs/prd.md`
 
-This is the compatibility index. **Normative wording lives only in the linked topic documents.**
-The original headings remain here to preserve legacy GitHub fragment links.
+This is the compatibility index. **Requirements live in the linked topic documents.**
+Original headings/IDs remain for legacy links; removed requirements are labeled.
 Use only the sections relevant to the current task.
+
+The revised MVP uses explicit CLI invocation, `act`, Docker/Linux containers,
+and download-on-miss with verified cache reuse. Automatic Git gates and approval
+UX are removed; hosted-run suppression is deferred. See the
+[revision handoff](prd/documentation-and-next.md#revision-scope-and-authority)
+for the requirement map and older documents awaiting reconciliation.
+This PRD change does not change runtime code or complete D3 acceptance.
 
 ## 1. Product Summary
 
@@ -30,7 +37,7 @@ Use only the sections relevant to the current task.
 
 ### Commit gate
 
-[Read the complete section](prd/product-and-flow.md#commit-gate).
+**Removed:** [Legacy section](prd/product-and-flow.md#commit-gate).
 
 ### AI-agent flow
 
@@ -38,7 +45,7 @@ Use only the sections relevant to the current task.
 
 ### Push gate
 
-[Read the complete section](prd/product-and-flow.md#push-gate).
+**Removed:** [Legacy section](prd/product-and-flow.md#push-gate).
 
 ## 6. Functional Requirements
 
@@ -66,7 +73,7 @@ Use only the sections relevant to the current task.
 
 ### FR-6 — Exact-state gating
 
-[Read the complete section](prd/gating-and-remote-requirements.md#fr-6--exact-state-gating).
+**Revised to report accuracy:** [Read the section](prd/gating-and-remote-requirements.md#fr-6--exact-state-gating).
 
 ### FR-7 — Native Git workflow
 
@@ -74,15 +81,15 @@ Use only the sections relevant to the current task.
 
 ### FR-8 — Developer decision UI
 
-[Read the complete section](prd/gating-and-remote-requirements.md#fr-8--developer-decision-ui).
+**Removed:** [Read the disposition](prd/gating-and-remote-requirements.md#fr-8--developer-decision-ui).
 
 ### FR-9 — Developer-only bypass
 
-[Read the complete section](prd/gating-and-remote-requirements.md#fr-9--developer-only-bypass).
+**Removed:** [Read the disposition](prd/gating-and-remote-requirements.md#fr-9--developer-only-bypass).
 
 ### FR-10 — Remote duplicate-execution control
 
-[Read the complete section](prd/gating-and-remote-requirements.md#fr-10--remote-duplicate-execution-control).
+**Deferred:** [Read the boundary](prd/gating-and-remote-requirements.md#fr-10--remote-duplicate-execution-control).
 
 ### FR-11 — Logs and diagnostics
 
