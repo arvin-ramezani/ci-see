@@ -44,9 +44,12 @@ No selected work may disappear silently during discovery or execution.
 ## 5. MVP Event Policy
 
 Support `pull_request`, `push` and `workflow_dispatch` for compatible workloads.
-Retain the earlier per-workflow default preference: pull_request, then push,
-then workflow_dispatch. Run each eligible workflow once, not once per trigger.
-An explicit event overrides that preference and selects matching workflows.
+**PROPOSED, not approved:** the historical preference was pull_request, then push,
+then workflow_dispatch, with each eligible workflow run once. PRD §14.1 leaves
+default event and workflow/job selection open; history is not owner authorization.
+CLI-01 must record an owner-approved default/selection policy before dependent
+S2 selection behavior is implemented. Explicit-event behavior must follow that
+approved contract, not silently establish a default or broaden selected work.
 
 Required missing context/dispatch inputs remain INCOMPLETE; do not fall back to a
 different event to hide missing input. Report unsupported-only workflows and
@@ -55,6 +58,7 @@ an intentional subset PASS is labeled as such.
 
 Normal invocation derives available local context and accepts missing values
 through CLI inputs; no hand-written event JSON required.
-Exact option spelling, listing syntax and input precedence remain **CLI-01**,
+Default event/workflow/job selection, option spelling, listing syntax and input
+precedence remain **CLI-01**,
 to be finalized in a focused contract before CLI feature implementation.
 Advanced payload support must follow the same validation/identity rules.

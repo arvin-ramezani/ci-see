@@ -19,12 +19,12 @@ not an implemented workflow runner. Runtime source remains unchanged.
 | Architecture §1–6 | Same child path: explicit CLI/act/Docker, current tested source and per-run reports replace hooks/gate state |
 | Architecture §7–10 | Same path: independent Git, retired approval component; retain argv, truthful outcomes, credentials/cleanup and host distinctions |
 | Architecture §11–13 | Same path: fresh workflow/engine/report responsibilities; retain consumer seams, boundary validation, Go and unresolved decisions |
-| Execution §1–5 | Same path: discovery/selection and existing per-workflow event preference retained; remove implicit Git-gate purpose; classify missing/unsupported input |
+| Execution §1–5 | Same path: discovery/selection retained; historical event preference is PROPOSED pending owner-approved CLI-01, not a default contract; classify missing/unsupported input |
 | Execution §6–10 | Same path: current-file identity replaces index/push target; retain truthful payloads, concurrency, private transport, redaction and cancellation |
 | Execution §11–15 and dated dependency policy | Same path: retain twelve acceptance IDs, verified download/reuse and no hosted parity; revise detailed oracles for explicit runs/reports |
 | Plan §1–3 | Same path: D1 retired, D2 deferred, D3 historical, D4 retained; CLI-01/SRC-01/DEP-01/SEC-01 record unresolved dependent decisions |
 | Plan §4 | Same path: S0/S1 retain foundation; S2–S5 fresh discovery/dependency/execution/report work; S6/S7 retired, S8 deferred, S9/S10 revised release/acceptance |
-| Plan §5–7 | Same path: focused verification, separate independent/owner gates and actual host acceptance; remove gate/provider/remote suppression prerequisites |
+| Plan §5–7 | Same path: focused verification, independent/owner gates and host acceptance; retain PRD §11 measurement obligations through S9/S10/PERF-01; remove gate/provider/remote suppression prerequisites |
 | Git gating/approval indexes and six children | Historical banner only; original bodies, IDs, headings and acceptance numbers unchanged |
 | S0 historical matrix/fixtures/snapshot decisions/D3 procedures | Historical banner only; original bodies remain inspectable, not revised product obligations |
 | S0 index/testing interfaces | Current routing/testing seams; preserve old headings for known links; replace gate/provider advice |

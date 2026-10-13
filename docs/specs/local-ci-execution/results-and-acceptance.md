@@ -47,8 +47,9 @@ Required acceptance coverage; these are obligations, not existing passing fixtur
 
 1. Discover/list/select compatible workflow/job files; invalid YAML, unsafe paths,
    ambiguous jobs, unsupported selections and empty execution cannot PASS.
-2. Deterministic per-workflow defaults and explicit events, visible exclusions,
+2. Deterministic owner-approved defaults/selection and explicit events, visible exclusions,
    supported dependencies/matrices and no silent event fallback.
+   CLI-01 is unresolved; the historical preference is PROPOSED, not a test oracle.
 3. Derive truthful local payloads without normal manual JSON; missing/invalid/conflicting
    inputs and dirty/HEAD mismatch are non-PASS or accurately represented.
 4. Missing/unusable `act`, Docker or repository prerequisites cannot PASS;

@@ -29,7 +29,7 @@ L-n identifiers refer to the twelve current numbered acceptance clauses.
 | ID | Slices | Required evidence |
 | --- | --- | --- |
 | L-01 | S2 | Discovery, YAML/path errors, listing/selection, no empty PASS |
-| L-02 | S2/S4 | Default/explicit events, dependency/matrix scope and exclusions |
+| L-02 | S2/S4 | Deterministic selection/defaults against owner-approved CLI-01; explicit events, dependency/matrix scope and exclusions; historical preference is not an oracle |
 | L-03 | S2/S4/S5 | Truthful payloads/current dirty inputs and required-field errors |
 | L-04 | S1/S3 | Dependency/setup failure, informational commands, no Git integration |
 | L-05 | S4/S5 | Failed/mixed/uncertain execution and complete result aggregation |
@@ -43,10 +43,20 @@ L-n identifiers refer to the twelve current numbered acceptance clauses.
 
 ## Open decisions and historical evidence
 
-CLI-01/SRC-01/DEP-01/SEC-01 are in the
+CLI-01/SRC-01/DEP-01/SEC-01/PERF-01 are in the
 [current decision register](../implementation-plan/authority-and-gates.md#current-cli-decisions).
 Only their dependent implementation is blocked; unrelated documented work can proceed.
 D4 governs release support. D1 is retired, D2 deferred, and D3 historical.
+
+## PRD success measurements
+
+[PRD §11](../prd/success-and-decisions.md#11-success-criteria) requires setup-step
+count, orchestration overhead, cold/warm duration, disk use and downloaded bytes.
+S9 owns the documented representative-workflow baseline and post-baseline budget
+approval; S10 owns measured verification against every approved budget before release.
+Methods, units, evidence and missing-data behavior are in the
+[measurement protocol](../implementation-plan/verification-and-risks.md#success-measurement-and-budget-gate).
+PERF-01 remains open; no measurements or approved numeric targets exist in this PR.
 
 Old [G/A mapping](traceability.md) and [fixtures](fixtures.md) are historical.
 Useful failure/privacy/concurrency test ideas may be adapted with a new current

@@ -34,10 +34,11 @@ Retired gating/approval docs and historical S0/D3 procedures are not product aut
 
 | ID | Required contract | Blocking scope |
 | --- | --- | --- |
-| CLI-01 | CLI flags/subcommands, input precedence, numeric exits, JSON/report schema and stdout/stderr | New CLI/report interface |
+| CLI-01 | Owner-approved default event/workflow/job selection, CLI flags/subcommands, input precedence, numeric exits, JSON/report schema and stdout/stderr | Dependent S2 selection behavior and new CLI/report interface; historical event preference is PROPOSED only |
 | SRC-01 | Tested current-file capture, ignored/untracked policy, links/submodules, Git metadata and change detection | Source execution |
 | DEP-01 | Trusted sources/ref resolution and enforcing verified act/Docker artifacts without engine substitution | Dependency execution handoff |
 | SEC-01 | Effective config/env/credentials, acquisition/runtime networks, mounts/privilege, bounded processes and run-owned cleanup | Real workflow integration |
+| PERF-01 | Representative-workflow measurement protocol, baseline evidence, post-baseline owner-approved numeric budgets and comparison rules for every PRD §11 metric | S9/S10 acceptance and release; no invented numbers or live measurements in this docs PR |
 
 These are unresolved implementation contracts, not permissions to invent behavior.
 An open decision blocks dependent work, not the existing foundation or documentation.
