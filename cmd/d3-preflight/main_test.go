@@ -58,6 +58,125 @@ func TestRunPositiveResultStillDoesNotAuthorizeOrRedeem(t *testing.T) {
 	}
 }
 
+func TestRunReadinessProfileValidatesWithoutAuthorizing(t *testing.T) {
+	args, _, now := writeFixtureFiles(t)
+	profileBytes := writeReadinessFixture(t, args)
+	profilePath := filepath.Join(t.TempDir(), "readiness.json")
+	if err := os.WriteFile(profilePath, profileBytes, 0600); err != nil {
+		t.Fatal(err)
+	}
+	args = append(args, "--readiness-profile", profilePath)
+	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x42}, ed25519.SeedSize))
+	keys := map[string]ed25519.PublicKey{"fixture-key": privateKey.Public().(ed25519.PublicKey)}
+	var stdout, stderr bytes.Buffer
+	if code := run(args, &stdout, &stderr, keys, d3preflight.Clock{Now: now, Trusted: true}); code != exitOK {
+		t.Fatalf("exit = %d, stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	got := stdout.String()
+	for _, expected := range []string{"READINESS_PROFILE_VALIDATED", "CONFIG_VALID", "execution_authorized=false", "approval_redeemed=false"} {
+		if !strings.Contains(got, expected) {
+			t.Errorf("stdout %q missing %q", got, expected)
+		}
+	}
+	if strings.Contains(got, "READY") || strings.Contains(got, "PASS") {
+		t.Fatalf("readiness result implied execution or acceptance: %q", got)
+	}
+}
+
+func TestRunRejectsDuplicateReadinessProfileFlag(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := run(nil, &stdout, &stderr, nil, d3preflight.Clock{}); code != exitIncomplete {
+		t.Fatalf("baseline exit = %d", code)
+	}
+	if code := run([]string{"--readiness-profile", "one", "--readiness-profile", "two"}, &stdout, &stderr, nil, d3preflight.Clock{}); code != exitUsage {
+		t.Fatalf("duplicate profile flag exit = %d", code)
+	}
+	if !strings.Contains(stderr.String(), "duplicate_argument") {
+		t.Fatalf("stderr = %q", stderr.String())
+	}
+}
+
+func writeReadinessFixture(t *testing.T, args []string) []byte {
+	t.Helper()
+	profile := d3preflight.ReadinessProfile{
+		Schema: d3preflight.ReadinessSchema,
+		Host:   d3preflight.ReadinessHost{ID: "host-01", WindowsVersion: "Windows 11", HyperVAvailable: boolPointer(true), HyperVEvidenceRef: "host-hyperv-evidence"},
+		VM:     d3preflight.ReadinessVM{ID: "vm-01", Disposable: boolPointer(true), NestedVirtualization: boolPointer(true), WSL2Available: boolPointer(true), SnapshotID: "snapshot-01", PrerequisiteEvidenceRef: "vm-prereq-evidence"},
+		Legs: d3preflight.ReadinessLegs{
+			WindowsNativeGuestID: "guest-01", WindowsNativeEvidenceRef: "windows-native-evidence",
+			WSL2GuestID: "wsl-guest-01", WSL2EvidenceRef: "wsl2-evidence",
+		},
+		Network: d3preflight.ReadinessNetwork{BoundaryID: "outside-boundary-01", DenyByDefault: boolPointer(true), EnforcedOutsideGuest: boolPointer(true), IndependentCapture: boolPointer(true), EnforcementEvidenceRef: "network-enforcement-evidence", CaptureEvidenceRef: "network-capture-evidence"},
+		Docker:  d3preflight.ReadinessDocker{DaemonID: "disposable-daemon-01", Disposable: boolPointer(true), ConfinedToVM: boolPointer(true), CredentialsIsolated: boolPointer(true), HostSocketExposed: boolPointer(false), HostMountsAllowed: boolPointer(false), PrivilegedContainers: boolPointer(false), RunOwnedProcessBoundary: boolPointer(true), BoundaryEvidenceRef: "docker-boundary-evidence"},
+		Dependencies: d3preflight.ReadinessDependencies{
+			AcquisitionBoundaryID: "acquisition-boundary-01", AcquisitionEvidenceRef: "acquisition-evidence",
+			Tools:   []d3preflight.ReadinessToolPin{{Name: "act", Version: "v0.2.81", SHA256: strings.Repeat("3", 64)}},
+			Images:  []d3preflight.ReadinessImagePin{{Name: "runner", Reference: "registry.example.test/runner@sha256:" + strings.Repeat("f", 64), Platform: "linux/amd64", Digest: "sha256:" + strings.Repeat("f", 64)}},
+			Actions: []d3preflight.ReadinessActionPin{{Name: "actions-checkout", Repository: "https://github.com/actions/checkout", Commit: strings.Repeat("4", 40), TreeSHA: strings.Repeat("5", 40), ContentSHA256: strings.Repeat("6", 64)}},
+		},
+		Lifecycle: d3preflight.ReadinessLifecycle{CleanupPolicy: "run-owned-only", RollbackSnapshot: "snapshot-01", EvidenceRef: "lifecycle-evidence"},
+	}
+	manifestPath := valueAfter(args, "--manifest")
+	approvalPath := valueAfter(args, "--approval")
+	manifestBytes, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest d3preflight.Manifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	profile.ExecutionLeg = manifest.Environment.ExecutionLeg
+	if profile.ExecutionLeg == "wsl2" {
+		profile.Legs.WSL2GuestID = manifest.Environment.GuestID
+	} else {
+		profile.Legs.WindowsNativeGuestID = manifest.Environment.GuestID
+	}
+	profile.Lifecycle.ResourceOwnerID = manifest.Cleanup.RunLabel
+	profile.Lifecycle.EvidenceCustodyID = manifest.Cleanup.EvidenceCustodyID
+	for _, command := range manifest.Commands {
+		profile.Lifecycle.TimeoutSeconds += command.TimeoutSeconds
+	}
+	profileBytes, err := json.Marshal(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	profileDigest := sha256.Sum256(profileBytes)
+	manifest.Environment.EnvironmentProfileSHA = hex.EncodeToString(profileDigest[:])
+	manifestBytes, err = json.Marshal(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(manifestPath, manifestBytes, 0600); err != nil {
+		t.Fatal(err)
+	}
+	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x42}, ed25519.SeedSize))
+	manifestDigest := sha256.Sum256(manifestBytes)
+	signed := append([]byte("CI-SEE-D3-MANIFEST-V1\x00"), manifestBytes...)
+	approvalBytes, err := json.Marshal(d3preflight.Approval{
+		Schema: d3preflight.ApprovalSchema, KeyID: "fixture-key", ManifestSHA256: hex.EncodeToString(manifestDigest[:]),
+		Signature: base64.StdEncoding.EncodeToString(ed25519.Sign(privateKey, signed)),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(approvalPath, approvalBytes, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return profileBytes
+}
+
+func valueAfter(args []string, name string) string {
+	for index := 0; index+1 < len(args); index++ {
+		if args[index] == name {
+			return args[index+1]
+		}
+	}
+	return ""
+}
+
+func boolPointer(value bool) *bool { return &value }
+
 func TestRunWithPinnedFixtureKeyStillRequiresTrustedClock(t *testing.T) {
 	args, key, _ := writeFixtureFiles(t)
 	var stdout, stderr bytes.Buffer

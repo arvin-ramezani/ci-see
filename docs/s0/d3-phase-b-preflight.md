@@ -1,8 +1,10 @@
 # D3 Phase B — Offline preflight verifier
 
 **Status:** preparation implementation only; not runtime verification or execution authorization.  
-**Scope:** PR #18's owner-authorized exception in [authority and gates](../implementation-plan/authority-and-gates.md).  
+**Scope:** Offline verifier exception in [authority and gates](../implementation-plan/authority-and-gates.md); readiness-mode scope is separately documented below.
 **Required status:** **D3 = PARTIAL; real `act` = BLOCKED; PRODUCTION_READY = NO.**
+
+The separately authorized [environment-readiness preparation](d3-phase-b-readiness.md) adds an opt-in readiness-profile mode. It does not alter manifest-only behavior or any runtime gate.
 
 ## Boundary and operations
 
@@ -36,6 +38,12 @@ The one execution-stage command must use the pinned `act` tool and explicitly re
 These are offline argv consistency checks against the reviewed Phase A command shape. They do not inspect the workflow to verify that it references exactly the declared action IDs, or confirm the action cache's bytes; a separate runtime gate must compare the pinned workflow contents, resolved action references and verified cache inventory with these IDs. The verifier also cannot prove that referenced files are empty, confirm image availability or effective Docker HostConfig/network state, or prove runtime isolation. `CONFIG_VALID` reports input, signature, scope, expiry, and command-shape validation only; it is not execution-policy approval. A separately reviewed runtime security gate and separate exact-run authorization remain mandatory.
 
 Reject invalid UTF-8, a BOM, duplicate object keys, unknown or case-mismatched fields, malformed or trailing JSON, noncanonical encodings, invalid pins, scope mismatch, invalid timestamps, expired/future approvals, and validity longer than eight hours. CLI option duplication is also rejected. The expected identity is supplied by the caller and is only compared with the signed manifest; matching values do not authorize execution. The key ID resolves only through a separately configured trust map; a key supplied by the manifest or approval envelope is never trusted. No owner-approved key fingerprint or trusted clock source is configured, so production command runs remain **BLOCKED** even though tests verify the cryptographic and time-window code with disposable fixtures. Clock uncertainty has no skew allowance and fails closed.
+
+### Optional readiness-profile mode
+
+`--readiness-profile <path>` opts into readiness validation and still requires all manifest, approval, and expected-scope inputs above. The verifier first runs the unchanged signed-manifest checks, then parses the bounded `ci-see.d3.environment-readiness.v1` profile. It hashes the original profile file bytes with SHA-256 and requires an exact match to the signed manifest's `environment.environment_profile_sha256`; it does not normalize or re-encode the profile before hashing. Duplicate keys, unknown or case-mismatched fields, invalid UTF-8/BOM, malformed JSON, trailing values, or oversized input fail closed. The profile's selected `execution_leg` and corresponding per-leg guest ID must match the signed manifest environment. Its resource owner and evidence-custody IDs must match the signed cleanup run label and custody ID. Its lifecycle timeout must equal the sum of all signed serial command timeout budgets. Mismatches are `BLOCKED`. Pinned tool, image, and action identities must match the signed manifest artifacts.
+
+The maximum positive result is `CONFIG_VALID` with `execution_authorized=false` and `approval_redeemed=false`. Profile IDs and evidence references are caller-supplied strings; this offline validator does not prove the referenced host, network control, capture, daemon, dependencies, process ownership, cleanup, rollback, or evidence exists or is effective. Missing owner selections/references return `INCOMPLETE`; unsafe or conflicting profile values return `BLOCKED`. This mode cannot redeem approval, invoke `act`, or satisfy future runtime gates. Omitting `--readiness-profile` preserves manifest-only behavior.
 
 ## Verification and remaining gates
 

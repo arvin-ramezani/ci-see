@@ -52,6 +52,7 @@ func run(args []string, stdout, stderr io.Writer, keys map[string]ed25519.Public
 	snapshotID := flags.String("snapshot-id", "", "expected snapshot identity")
 	guestID := flags.String("guest-id", "", "expected guest identity")
 	leg := flags.String("leg", "", "expected execution leg (windows-native or wsl2)")
+	readinessProfilePath := flags.String("readiness-profile", "", "optional environment readiness profile JSON path")
 	if err := flags.Parse(args); err != nil || flags.NArg() != 0 {
 		return printResult(stderr, "INCOMPLETE", "arguments_invalid", exitUsage)
 	}
@@ -67,7 +68,7 @@ func run(args []string, stdout, stderr io.Writer, keys map[string]ed25519.Public
 	if !ok {
 		return printResult(stderr, string(d3preflight.StatusIncomplete), "approval_unavailable", exitIncomplete)
 	}
-	result := d3preflight.Validate(d3preflight.Input{
+	manifestInput := d3preflight.Input{
 		ManifestBytes: manifestBytes,
 		ApprovalBytes: approvalBytes,
 		TrustedKeys:   keys,
@@ -76,7 +77,17 @@ func run(args []string, stdout, stderr io.Writer, keys map[string]ed25519.Public
 			HostID: *hostID, VMID: *vmID, SnapshotID: *snapshotID, GuestID: *guestID, ExecutionLeg: *leg,
 		},
 		Clock: clock,
-	})
+	}
+	var result d3preflight.Result
+	if *readinessProfilePath == "" {
+		result = d3preflight.Validate(manifestInput)
+	} else {
+		profileBytes, ok := readBounded(*readinessProfilePath, d3preflight.MaxReadinessProfile)
+		if !ok {
+			return printResult(stderr, string(d3preflight.StatusIncomplete), "readiness_profile_unavailable", exitIncomplete)
+		}
+		result = d3preflight.ValidateReadiness(d3preflight.ReadinessInput{Manifest: manifestInput, ProfileBytes: profileBytes})
+	}
 	if result.Status != d3preflight.StatusConfigValid {
 		code := exitBlocked
 		if result.Status == d3preflight.StatusIncomplete {
@@ -84,11 +95,20 @@ func run(args []string, stdout, stderr io.Writer, keys map[string]ed25519.Public
 		}
 		return printResult(stderr, string(result.Status), result.Code, code)
 	}
-	if _, err := fmt.Fprintln(stdout, "SIGNATURE_VALID"); err != nil {
-		return exitInternal
-	}
-	if _, err := fmt.Fprintln(stdout, "CONFIG_VALID"); err != nil {
-		return exitInternal
+	if *readinessProfilePath == "" {
+		if _, err := fmt.Fprintln(stdout, "SIGNATURE_VALID"); err != nil {
+			return exitInternal
+		}
+		if _, err := fmt.Fprintln(stdout, "CONFIG_VALID"); err != nil {
+			return exitInternal
+		}
+	} else {
+		if _, err := fmt.Fprintln(stdout, "READINESS_PROFILE_VALIDATED"); err != nil {
+			return exitInternal
+		}
+		if _, err := fmt.Fprintln(stdout, "CONFIG_VALID"); err != nil {
+			return exitInternal
+		}
 	}
 	if _, err := fmt.Fprintln(stdout, "execution_authorized=false approval_redeemed=false"); err != nil {
 		return exitInternal
@@ -124,7 +144,7 @@ func hasDuplicateFlags(args []string) bool {
 
 func isValueFlag(name string) bool {
 	switch name {
-	case "manifest", "approval", "repository", "pr", "head-sha", "tree-sha", "run-id", "host-id", "vm-id", "snapshot-id", "guest-id", "leg":
+	case "manifest", "approval", "repository", "pr", "head-sha", "tree-sha", "run-id", "host-id", "vm-id", "snapshot-id", "guest-id", "leg", "readiness-profile":
 		return true
 	default:
 		return false
